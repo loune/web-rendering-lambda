@@ -1,0 +1,30 @@
+{
+  "name": "web-rendering-lambda",
+  "version": "1.0.0",
+  "description": "Serverless Lambda for rendering webpages to PNG, JPEG and PDF.",
+  "scripts": {
+    "package": "yarn package-without-chrome",
+    "package-with-chrome": "yarn package-prepare && tar -xzf headless-chromium.tar.gz -C dist && cd dist && zip -rq ../package.zip .",
+    "package-without-chrome": "yarn package-prepare && cd dist && rm -f ../package.zip && zip -rq ../package.zip .",
+    "package-prepare": "yarn babel && cp -r package.json yarn.lock dist && cd dist && PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1 yarn install --production",
+    "babel": "rm -rf dist && mkdir dist && ./node_modules/.bin/babel src --extensions .ts,.js --out-dir dist",
+    "start": "yarn babel && cp -r node_modules dist && node dist/localserver.js"
+  },
+  "dependencies": {
+    "archiver": "^3.0.0",
+    "base64-stream": "^1.0.0",
+    "puppeteer": "^1.9.0",
+    "tar": "^4.4.6"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.1.2",
+    "@babel/core": "^7.1.2",
+    "@babel/preset-env": "^7.1.0",
+    "@babel/preset-typescript": "mv ^7.1.0",
+    "@types/node": "^10.12.0",
+    "aws-sdk": "^2.339.0",
+    "prettier": "1.14.3",
+    "serverless-apigw-binary": "^0.4.4",
+    "serverless-hooks-plugin": "^1.1.0"
+  }
+}

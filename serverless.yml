@@ -1,0 +1,46 @@
+service: web-rendering-lambda
+
+provider:
+  name: aws
+  stage: dev
+  region: us-east-1
+  runtime: nodejs8.10
+  memorySize: 1536
+  timeout: 30
+  # S3 upload
+  iamRoleStatements:
+   -  Effect: "Allow"
+      Action:
+        - "s3:PutObject"
+      Resource: "arn:aws:s3:::*"
+
+functions:
+  render:
+    handler: render.handler
+    events: # All events associated with this function
+      - http:
+          path: render
+          method: get
+          request:
+            parameters:
+              querystrings:
+                url: true
+                type: false
+      - http:
+          path: render
+          method: post
+
+package:
+  artifact: ./package.zip
+  
+plugins:
+  - serverless-apigw-binary
+  - serverless-hooks-plugin
+
+custom:
+  apigwBinary:
+    types:
+      - '*/*'
+  hooks:
+    package:initialize:
+      - yarn package
