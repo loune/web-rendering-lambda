@@ -267,7 +267,7 @@ export const render = async (browser, config: RenderConfig) => {
     resultB64 = await archiveBase64(bufMap);
     //await archiveFile(bufMap, `${__dirname}/example.zip`);
   } else if (['jpeg', 'png', 'pdf'].includes(config.type)) {
-    console.log(`Rendering ${config.url} to ${config.type}`);
+    console.log(`Rendering ${config.url || 'content'} to ${config.type}`);
     resultB64 = await renderPage(browser, config, 'base64');
   } else {
     return errorResponse(400, `Invalid type specified (${config.type})`);
