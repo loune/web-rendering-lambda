@@ -4,9 +4,7 @@ import * as fs from 'fs';
 import tar from 'tar';
 import * as aws from 'aws-sdk';
 
-const s3 = new aws.S3({ apiVersion: '2006-03-01' });
-
-const chromeS3Bucket = 'your-chrome-s3-bucket';
+const chromeS3Bucket = 'chrome-html';
 const chromeTgzFilename = 'headless-chromium.tar.gz';
 const chromeExeFilname = 'headless-chromium';
 
@@ -52,13 +50,14 @@ export async function findChrome(isLambda): Promise<string> {
   }
 
   let tmpPath = '/tmp';
-  let chromePathTmp = path.join(tmpPath, chromeExeFilname);
   let chromePathUncompressed = path.join(__dirname, chromeExeFilname);
-  let chromePathTgz = path.join(__dirname, chromeTgzFilename);
 
   if (fs.existsSync(chromePathUncompressed)) {
     return chromePathUncompressed;
   }
+
+  let chromePathTmp = path.join(tmpPath, chromeExeFilname);
+  let chromePathTgz = path.join(__dirname, chromeTgzFilename);
 
   if (fs.existsSync(chromePathTmp)) {
     return chromePathTmp;
@@ -81,6 +80,7 @@ export async function findChrome(isLambda): Promise<string> {
   }
   
   if (chromeS3Bucket) {
+    const s3 = new aws.S3({ apiVersion: '2006-03-01' });
     // s3
     await new Promise((resolve, reject) => {
       const params = {

@@ -9,7 +9,7 @@
     "package-prepare": "yarn babel && cp -r package.json yarn.lock dist && cd dist && PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1 yarn install --production",
     "babel": "rm -rf dist && mkdir dist && ./node_modules/.bin/babel src --extensions .ts,.js --out-dir dist",
     "start": "yarn babel && cp -r node_modules dist && node dist/localserver.js",
-    "lint": "eslint --ext .js,.ts src"
+    "lint": "tsc && eslint --ext .js,.ts src"
   },
   "dependencies": {
     "archiver": "^3.0.0",

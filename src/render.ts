@@ -1,6 +1,7 @@
 import { APIGatewayProxyResult, APIGatewayEvent } from 'aws-lambda';
 import { getBrowser, closeBrowser, version } from './chrome';
 import { archiveBase64, archiveFile } from './archive';
+import { Browser, Base64ScreenShotOptions, ScreenshotOptions, ElementHandle } from 'puppeteer';
 
 interface Query {
   url: string;
@@ -44,6 +45,7 @@ interface RenderPageConfig {
   paperFormat?: string;
   paperScale?: number;
   landscape?: boolean;
+  selector?: string;
 }
 
 interface RenderMultipleConfig {
@@ -66,7 +68,7 @@ const defaultViewportWidth = 1280;
 const defaultViewportHeight = 800;
 const defaultViewportdeviceScaleFactor = 1;
 
-async function renderPage(browser, config: RenderPageConfig, encoding: 'base64' | 'binary'): Promise<string | Buffer> {
+async function renderPage(browser: Browser, config: RenderPageConfig, encoding: 'base64' | 'binary'): Promise<string | Buffer> {
   const page = await browser.newPage();
 
   if (config.viewport) {
@@ -121,8 +123,17 @@ async function renderPage(browser, config: RenderPageConfig, encoding: 'base64' 
     }
   }
 
+  let element: ElementHandle<Element> = null;
+  if (config.selector) {
+    element = await page.$(config.selector);
+  }
+
   let result;
   if (config.type === 'pdf') {
+    if (element) {
+      throw new Error('selector not compatible with type pdf');
+    }
+
     let pdfOptions: any = {};
 
     if (config.paperFormat) {
@@ -154,18 +165,22 @@ async function renderPage(browser, config: RenderPageConfig, encoding: 'base64' 
     let buffer = await page.pdf(pdfOptions);
     result = encoding === 'base64' ? buffer.toString('base64') : buffer;
   } else {
-    let options: any = {
+    let options: ScreenshotOptions = {
       encoding,
       type: config.type,
       fullPage: config.fullPage,
-      omitBackground: config.transparentBackground || false
+      omitBackground: config.transparentBackground || false,
     };
 
     if (config.type === 'jpeg' && config.jpegQuality) {
       options.quality = config.jpegQuality;
     }
 
-    result = await page.screenshot(options);
+    if (element) {
+      result = await element.screenshot(options);
+    } else {
+      result = await page.screenshot(options);
+    }
   }
 
   page.close();
@@ -173,7 +188,7 @@ async function renderPage(browser, config: RenderPageConfig, encoding: 'base64' 
   return result;
 }
 
-function errorResponse(statusCode, message): APIGatewayProxyResult {
+function errorResponse(statusCode: number, message: string): APIGatewayProxyResult {
   console.error(`${statusCode}: ${message}`);
   return {
     statusCode: statusCode,
@@ -185,11 +200,11 @@ function errorResponse(statusCode, message): APIGatewayProxyResult {
   };
 }
 
-export const render = async (browser, config: RenderConfig): Promise<APIGatewayProxyResult> => {
+export const render = async (browser: Browser, config: RenderConfig): Promise<APIGatewayProxyResult> => {
   let additionalHeaders = {};
   let resultB64;
 
-  await (await browser.newPage())._client.send('Network.clearBrowserCookies');
+  await ((await browser.newPage()) as any)._client.send('Network.clearBrowserCookies');
 
   if (config.type === 'zip') {
     if (!config.pages) {
@@ -288,6 +303,7 @@ export const handler = async (event: APIGatewayEvent, context, callback): Promis
       console.warn(`Error ${e}. Retrying...`);
       await handler({ ...event, isOurRetry: true } as any, context, callback);
     } else {
+      console.error(`Error ${e}.`);
       callback(e);
     }
   }

@@ -29,7 +29,8 @@ http
   
       handler(event as any, {}, (error, responseObj) => {
         if (error) {
-          response.end(error);
+          response.writeHead(500);
+          response.end(error.message);
           return;
         }
   
