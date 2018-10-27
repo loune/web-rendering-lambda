@@ -6,5 +6,8 @@
       }
     }],
     ["@babel/preset-typescript", {}]
+  ],
+  "ignore": [
+    "**/*.spec.ts"
   ]
 }

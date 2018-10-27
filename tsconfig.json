@@ -3,7 +3,7 @@
         "target": "esnext",
         "module": "esnext",
         "moduleResolution": "node",
-        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
         "noEmit": true,
         "pretty": true,
         "skipLibCheck": true

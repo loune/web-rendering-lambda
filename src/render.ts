@@ -244,8 +244,12 @@ export const render = async (browser: Browser, config: RenderConfig): Promise<AP
   return response;
 };
 
-async function post(bodyStr: string, browser): Promise<APIGatewayProxyResult> {
+async function post(bodyStr: string, browser: Browser): Promise<APIGatewayProxyResult> {
   let body;
+  if (!bodyStr) {
+    return errorResponse(400, 'body is missing');
+  }
+
   try {
     if (bodyStr[0] !== '{') {
       // base64

@@ -20,6 +20,19 @@ const launchOptionForLambda = [
 let browser = null;
 export let version = null;
 
+export async function closeBrowser(): Promise<void> {
+  try {
+    if (browser) {
+      await browser.close();
+    }
+  } catch(e) {
+    console.error(e);
+  }
+
+  version = null;
+  browser = null;
+}
+
 async function browserOk(browser: puppeteer.Browser): Promise<boolean> {
   if (!browser) {
     return false;
@@ -29,19 +42,10 @@ async function browserOk(browser: puppeteer.Browser): Promise<boolean> {
     version = await browser.version();
     return true;
   } catch(e) {
-    browser = null;
-    version = null;
+    closeBrowser();
   }
 
   return false;
-}
-
-export async function closeBrowser(): Promise<void> {
-  try {
-    await browser.close();
-  } catch(e) {
-    console.error(e);
-  }
 }
 
 export async function findChrome(isLambda): Promise<string> {
