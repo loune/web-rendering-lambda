@@ -16,7 +16,10 @@ http
 
       let event = {
         body,
+        isBase64Encoded: false,
+        httpMethod: request.method.toUpperCase(),
         path: requestUrl.pathname,
+        headers: { },
         queryStringParameters: requestUrl.query,
         requestContext: {
           httpMethod: request.method.toUpperCase(),
@@ -24,9 +27,9 @@ http
         }
       };
   
-      handler(event, {}, (error, responseObj) => {
+      handler(event as any, {}, (error, responseObj) => {
         if (error) {
-          response.end(error.message);
+          response.end(error);
           return;
         }
   

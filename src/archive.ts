@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as Stream from 'stream';
-let archiver = require('archiver');
-let { Base64Encode } = require('base64-stream');
+import archiver from 'archiver';
+import { Base64Encode } from 'base64-stream';
 
 async function archive(buffers: Map<string, Buffer>, output: Stream): Promise<string> {
   return new Promise<string>((resolve, reject) => {

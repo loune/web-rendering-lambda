@@ -8,7 +8,8 @@
     "package-without-chrome": "yarn package-prepare && cd dist && rm -f ../package.zip && bestzip ../package.zip .",
     "package-prepare": "yarn babel && cp -r package.json yarn.lock dist && cd dist && PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1 yarn install --production",
     "babel": "rm -rf dist && mkdir dist && ./node_modules/.bin/babel src --extensions .ts,.js --out-dir dist",
-    "start": "yarn babel && cp -r node_modules dist && node dist/localserver.js"
+    "start": "yarn babel && cp -r node_modules dist && node dist/localserver.js",
+    "lint": "eslint --ext .js,.ts src"
   },
   "dependencies": {
     "archiver": "^3.0.0",
@@ -21,11 +22,19 @@
     "@babel/core": "^7.1.2",
     "@babel/preset-env": "^7.1.0",
     "@babel/preset-typescript": "mv ^7.1.0",
+    "@types/aws-lambda": "^8.10.14",
     "@types/node": "^10.12.0",
+    "@types/puppeteer": "^1.9.0",
     "aws-sdk": "^2.339.0",
     "bestzip": "^2.1.2",
+    "eslint": "^5.7.0",
+    "eslint-config-prettier": "^3.1.0",
+    "eslint-config-typescript": "^1.1.0",
+    "eslint-plugin-typescript": "^0.12.0",
     "prettier": "1.14.3",
     "serverless-apigw-binary": "^0.4.4",
-    "serverless-hooks-plugin": "^1.1.0"
+    "serverless-hooks-plugin": "^1.1.0",
+    "typescript": "^3.1.3",
+    "typescript-eslint-parser": "^20.0.0"
   }
 }

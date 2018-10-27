@@ -22,7 +22,7 @@ const launchOptionForLambda = [
 let browser = null;
 export let version = null;
 
-async function browserOk(browser) {
+async function browserOk(browser: puppeteer.Browser): Promise<boolean> {
   if (!browser) {
     return false;
   }
@@ -38,28 +38,12 @@ async function browserOk(browser) {
   return false;
 }
 
-export async function getBrowser(isLambda: boolean) {
-  if (await browserOk(browser)) {
-    return browser;
-  }
-
-  let executablePath = await findChrome(isLambda);
-
-  browser = await puppeteer.launch({
-    headless: true,
-    defaultViewport: null,
-    dumpio: false,
-    executablePath: isLambda ? executablePath : undefined,
-    args: isLambda ? launchOptionForLambda : undefined
-  });
-
-  return browser;
-}
-
-export async function closeBrowser() {
+export async function closeBrowser(): Promise<void> {
   try {
-    return await browser.close();
-  } catch(e) {}
+    await browser.close();
+  } catch(e) {
+    console.error(e);
+  }
 }
 
 export async function findChrome(isLambda): Promise<string> {
@@ -118,4 +102,22 @@ export async function findChrome(isLambda): Promise<string> {
   }
 
   return undefined;
+}
+
+export async function getBrowser(isLambda: boolean): Promise<puppeteer.Browser> {
+  if (await browserOk(browser)) {
+    return browser;
+  }
+
+  let executablePath = await findChrome(isLambda);
+
+  browser = await puppeteer.launch({
+    headless: true,
+    defaultViewport: null,
+    dumpio: false,
+    executablePath: isLambda ? executablePath : undefined,
+    args: isLambda ? launchOptionForLambda : undefined
+  });
+
+  return browser;
 }

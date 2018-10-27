@@ -1,3 +1,4 @@
+import { APIGatewayProxyResult, APIGatewayEvent } from 'aws-lambda';
 import { getBrowser, closeBrowser, version } from './chrome';
 import { archiveBase64, archiveFile } from './archive';
 
@@ -64,68 +65,6 @@ const defaultTimeout = 10000;
 const defaultViewportWidth = 1280;
 const defaultViewportHeight = 800;
 const defaultViewportdeviceScaleFactor = 1;
-
-async function post(bodyStr: string, browser) {
-  let body;
-  try {
-    if (bodyStr[0] !== '{') {
-      // base64
-      let buf = Buffer.from(bodyStr, 'base64');
-      bodyStr = buf.toString();
-    }
-
-    body = JSON.parse(bodyStr) as RenderConfig;
-  } catch (e) {
-    return errorResponse(400, e.message);
-  }
-
-  return await render(browser, body);
-}
-
-async function get(query: Query, browser) {
-  if (!query) {
-    return errorResponse(400, 'arguments missing');
-  }
-
-  return await render(browser, {
-    url: query.url,
-    type: query.type,
-    viewport: { width: query.width, height: query.height },
-    fullPage: query.fullpage
-  });
-}
-
-export const handler = async (event, context, callback) => {
-  const isLambda = event.requestContext.accountId !== undefined;
-  context.callbackWaitsForEmptyEventLoop = false;
-  const browser = await getBrowser(isLambda);
-  try {
-    let response = await handleEvent(event, browser);
-    callback(null, response);
-  } catch (e) {
-    closeBrowser();
-
-    if (!event.isOurRetry) {
-      console.warn(`Error ${e}. Retrying...`);
-      await handler({ ...event, isOurRetry: true }, context, callback);
-    } else {
-      callback(e);
-    }
-  }
-};
-
-async function handleEvent(event: any, browser: any) {
-  let response;
-  if (event.path === '/render') {
-    if (event.requestContext.httpMethod === 'POST') {
-      response = await post(event.body, browser);
-    }
-    else {
-      response = await get(event.queryStringParameters, browser);
-    }
-  }
-  return response;
-}
 
 async function renderPage(browser, config: RenderPageConfig, encoding: 'base64' | 'binary'): Promise<string | Buffer> {
   const page = await browser.newPage();
@@ -210,7 +149,7 @@ async function renderPage(browser, config: RenderPageConfig, encoding: 'base64' 
       pdfOptions.height = config.paperHeight;
     }
 
-      pdfOptions.printBackground = config.printBackground === undefined ? true : config.printBackground;
+    pdfOptions.printBackground = config.printBackground === undefined ? true : config.printBackground;
 
     let buffer = await page.pdf(pdfOptions);
     result = encoding === 'base64' ? buffer.toString('base64') : buffer;
@@ -234,7 +173,7 @@ async function renderPage(browser, config: RenderPageConfig, encoding: 'base64' 
   return result;
 }
 
-function errorResponse(statusCode, message) {
+function errorResponse(statusCode, message): APIGatewayProxyResult {
   console.error(`${statusCode}: ${message}`);
   return {
     statusCode: statusCode,
@@ -246,7 +185,7 @@ function errorResponse(statusCode, message) {
   };
 }
 
-export const render = async (browser, config: RenderConfig) => {
+export const render = async (browser, config: RenderConfig): Promise<APIGatewayProxyResult> => {
   let additionalHeaders = {};
   let resultB64;
 
@@ -288,4 +227,68 @@ export const render = async (browser, config: RenderConfig) => {
   };
 
   return response;
+};
+
+async function post(bodyStr: string, browser): Promise<APIGatewayProxyResult> {
+  let body;
+  try {
+    if (bodyStr[0] !== '{') {
+      // base64
+      let buf = Buffer.from(bodyStr, 'base64');
+      bodyStr = buf.toString();
+    }
+
+    body = JSON.parse(bodyStr) as RenderConfig;
+  } catch (e) {
+    return errorResponse(400, e.message);
+  }
+
+  return await render(browser, body);
+}
+
+async function get(query: Query, browser): Promise<APIGatewayProxyResult> {
+  if (!query) {
+    return errorResponse(400, 'arguments missing');
+  }
+
+  return await render(browser, {
+    url: query.url,
+    type: query.type,
+    viewport: { width: query.width, height: query.height },
+    fullPage: query.fullpage
+  });
+}
+
+async function handleEvent(event: any, browser: any): Promise<APIGatewayProxyResult> {
+  let response;
+  if (event.path === '/render') {
+    if (event.requestContext.httpMethod === 'POST') {
+      response = await post(event.body, browser);
+    } else {
+      response = await get(event.queryStringParameters, browser);
+    }
+  } else {
+    return errorResponse(404, `unknown api ${event.path}`);
+  }
+
+  return response;
+}
+
+export const handler = async (event: APIGatewayEvent, context, callback): Promise<void> => {
+  const isLambda = event.requestContext.accountId !== undefined;
+  context.callbackWaitsForEmptyEventLoop = false;
+  const browser = await getBrowser(isLambda);
+  try {
+    let response = await handleEvent(event, browser);
+    callback(null, response);
+  } catch (e) {
+    closeBrowser();
+
+    if (!(event as any).isOurRetry) {
+      console.warn(`Error ${e}. Retrying...`);
+      await handler({ ...event, isOurRetry: true } as any, context, callback);
+    } else {
+      callback(e);
+    }
+  }
 };
