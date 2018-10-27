@@ -3,7 +3,7 @@ import { getBrowser, closeBrowser, version } from './chrome';
 import { archiveBase64, archiveFile } from './archive';
 import { Browser, Base64ScreenShotOptions, ScreenshotOptions, ElementHandle } from 'puppeteer';
 
-interface Query {
+export interface Query {
   url: string;
   type: 'png' | 'jpeg' | 'pdf';
   width?: number;
@@ -54,7 +54,7 @@ interface RenderMultipleConfig {
   saveFilename?: string;
 }
 
-type RenderConfig = RenderPageConfig | RenderMultipleConfig;
+export type RenderConfig = RenderPageConfig | RenderMultipleConfig;
 
 enum formatContentType {
   zip = 'application/zip',
