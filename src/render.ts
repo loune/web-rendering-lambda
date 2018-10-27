@@ -71,6 +71,9 @@ const defaultViewportdeviceScaleFactor = 1;
 async function renderPage(browser: Browser, config: RenderPageConfig, encoding: 'base64' | 'binary'): Promise<string | Buffer> {
   const page = await browser.newPage();
 
+  // clear cookies
+  await (page as any)._client.send('Network.clearBrowserCookies');
+
   if (config.viewport) {
     await page.setViewport({
       width: Number(config.viewport.width) || defaultViewportWidth,
@@ -203,8 +206,6 @@ function errorResponse(statusCode: number, message: string): APIGatewayProxyResu
 export const render = async (browser: Browser, config: RenderConfig): Promise<APIGatewayProxyResult> => {
   let additionalHeaders = {};
   let resultB64;
-
-  await ((await browser.newPage()) as any)._client.send('Network.clearBrowserCookies');
 
   if (config.type === 'zip') {
     if (!config.pages) {

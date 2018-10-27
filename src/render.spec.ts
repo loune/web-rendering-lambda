@@ -161,6 +161,32 @@ describe('handler with POST', () => {
     expect(response.statusCode).toBe(200);
   });
 
+  it('render google selector with POST', async () => {
+    let event = generateEvent(
+      'POST',
+      {},
+      {
+        url: 'https://www.google.com.au/',
+        type: 'png',
+        selector: 'body',
+        viewport: { width: 1280, height: 600 }
+      }
+    );
+
+    let response: APIGatewayProxyResult;
+    let error;
+    await handler(event, {}, (herror, hresponse) => {
+      response = hresponse;
+      error = herror;
+    });
+
+    expect(response).not.toBeFalsy();
+    expect(response.body).not.toBeFalsy();
+    expect(error).toBeFalsy();
+    expect(response.isBase64Encoded).toBe(true);
+    expect(response.statusCode).toBe(200);
+  });
+
   it('render google pdf with POST', async () => {
     let event = generateEvent(
       'POST',
