@@ -1,7 +1,8 @@
 import { APIGatewayProxyResult, APIGatewayEvent } from 'aws-lambda';
-import { getBrowser, closeBrowser, version } from './chrome';
-import { archiveBase64, archiveFile } from './archive';
 import { Browser, Base64ScreenShotOptions, ScreenshotOptions, ElementHandle } from 'puppeteer';
+import * as Stream from 'stream';
+import { getBrowser, closeBrowser, version } from './chrome';
+import { archiveBase64, archiveFile, archive, archiveToS3, saveToS3 } from './archive';
 
 export interface Query {
   url: string;
@@ -48,13 +49,20 @@ interface RenderPageConfig {
   selector?: string;
 }
 
-interface RenderMultipleConfig {
+interface RenderOnlyPageConfig extends RenderPageConfig {
+  saveS3Bucket?: string;
+  saveS3Region?: string;
+}
+
+interface RenderMultiplePageConfig {
   type: 'zip';
   pages: RenderPageConfig[];
   saveFilename?: string;
+  saveS3Bucket?: string;
+  saveS3Region?: string;
 }
 
-export type RenderConfig = RenderPageConfig | RenderMultipleConfig;
+export type RenderConfig = RenderOnlyPageConfig | RenderMultiplePageConfig;
 
 enum formatContentType {
   zip = 'application/zip',
@@ -186,7 +194,7 @@ async function renderPage(browser: Browser, config: RenderPageConfig, encoding: 
     }
   }
 
-  page.close();
+  page.close().catch(e => console.error(e));
 
   return result;
 }
@@ -219,10 +227,34 @@ export const render = async (browser: Browser, config: RenderConfig): Promise<AP
       bufMap.set(config.pages[i].saveFilename || `file${i}.${config.pages[i].type}`, value as Buffer)
     );
 
+    if (config.saveS3Bucket) {
+      await archiveToS3(bufMap, config.saveFilename, config.saveS3Bucket, config.saveS3Region);
+      return {
+        statusCode: 200,
+        body: Buffer.from('OK').toString('base64'),
+        headers: {
+          'content-type': 'text/plain',
+        },
+        isBase64Encoded: true
+      };
+    }
+
     resultB64 = await archiveBase64(bufMap);
     //await archiveFile(bufMap, `${__dirname}/example.zip`);
   } else if (['jpeg', 'png', 'pdf'].includes(config.type)) {
     console.log(`Rendering ${config.url || 'content'} to ${config.type}`);
+    if (config.saveS3Bucket) {
+      let result = await renderPage(browser, config, 'binary');
+      await saveToS3(result as Buffer, config.saveFilename, config.saveS3Bucket, config.saveS3Region);
+      return {
+        statusCode: 200,
+        body: Buffer.from('OK').toString('base64'),
+        headers: {
+          'content-type': 'text/plain',
+        },
+        isBase64Encoded: true
+      };
+    }
     resultB64 = await renderPage(browser, config, 'base64');
   } else {
     return errorResponse(400, `Invalid type specified (${config.type})`);
