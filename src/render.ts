@@ -336,7 +336,7 @@ export const handler = async (event: APIGatewayEvent, context, callback): Promis
   } catch (e) {
     closeBrowser();
 
-    if (!(event as any).isOurRetry) {
+    if (e.message.includes('Protocol error') && !(event as any).isOurRetry) {
       console.warn(`Error ${e}. Retrying...`);
       await handler({ ...event, isOurRetry: true } as any, context, callback);
     } else {
