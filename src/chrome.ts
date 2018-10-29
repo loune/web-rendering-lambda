@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import tar from 'tar';
 import * as aws from 'aws-sdk';
 
-const chromeS3Bucket = 'chrome-html';
+const chromeS3Bucket = 'your-bucket-here';
 const chromeTgzFilename = 'headless-chromium.tar.gz';
 const chromeExeFilname = 'headless-chromium';
 

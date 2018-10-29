@@ -4,8 +4,8 @@
   "description": "Serverless Lambda for rendering webpages to PNG, JPEG and PDF.",
   "scripts": {
     "package": "yarn package-without-chrome",
-    "package-with-chrome": "yarn package-prepare && tar -xzf headless-chromium.tar.gz -C dist && cd dist && ./node_modules/.bin/bestzip ../package.zip .",
-    "package-without-chrome": "yarn package-prepare && cd dist && rm -f ../package.zip && ./node_modules/.bin/bestzip ../package.zip .",
+    "package-with-chrome": "yarn package-prepare && tar -xzf headless-chromium.tar.gz -C dist && cd dist && ../node_modules/.bin/bestzip ../package.zip .",
+    "package-without-chrome": "yarn package-prepare && cd dist && rm -f ../package.zip && ../node_modules/.bin/bestzip ../package.zip .",
     "package-prepare": "yarn babel && cp -r package.json yarn.lock dist && cd dist && PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1 yarn install --production",
     "babel": "rm -rf dist && mkdir dist && ./node_modules/.bin/babel src --extensions .ts,.js --out-dir dist",
     "start": "yarn babel && cp -r node_modules dist && node dist/localserver.js",
