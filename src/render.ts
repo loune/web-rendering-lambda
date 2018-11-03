@@ -1,8 +1,7 @@
 import { APIGatewayProxyResult, APIGatewayEvent } from 'aws-lambda';
-import { Browser, Base64ScreenShotOptions, ScreenshotOptions, ElementHandle } from 'puppeteer';
-import * as Stream from 'stream';
+import { Browser, ScreenshotOptions, ElementHandle, PDFOptions, PDFFormat } from 'puppeteer';
 import { getBrowser, closeBrowser, version } from './chrome';
-import { archiveBase64, archiveFile, archive, archiveToS3, saveToS3 } from './archive';
+import { archiveBase64, archiveToS3, saveToS3 } from './archive';
 
 export interface Query {
   url: string;
@@ -43,7 +42,7 @@ interface RenderPageConfig {
   paperMargin?: RenderPageConfigMargin;
   paperWidth?: string;
   paperHeight?: string;
-  paperFormat?: string;
+  paperFormat?: PDFFormat;
   paperScale?: number;
   landscape?: boolean;
   selector?: string;
@@ -122,11 +121,12 @@ async function renderPage(browser: Browser, config: RenderPageConfig, encoding: 
         waitUntil: ['domcontentloaded', 'networkidle0']
       });
     } else {
-      await page.setContent(config.content);
-      await page.waitForNavigation({
+      let waiter = page.waitForNavigation({
         timeout: config.timeout || defaultTimeout,
         waitUntil: ['domcontentloaded', 'networkidle0']
       });
+      await page.setContent(config.content);
+      await waiter;
     }
   } catch (e) {
     if (e.name !== 'TimeoutError') {
@@ -145,14 +145,14 @@ async function renderPage(browser: Browser, config: RenderPageConfig, encoding: 
       throw new Error('selector not compatible with type pdf');
     }
 
-    let pdfOptions: any = {};
+    let pdfOptions: PDFOptions = {};
 
     if (config.paperFormat) {
       pdfOptions.format = config.paperFormat;
     }
 
     if (config.landscape) {
-      pdfOptions.paperLandscape = config.landscape;
+      pdfOptions.landscape = config.landscape;
     }
 
     if (config.paperScale) {
@@ -300,7 +300,7 @@ async function post(bodyStr: string, browser: Browser): Promise<APIGatewayProxyR
 
 async function get(query: Query, browser): Promise<APIGatewayProxyResult> {
   if (!query) {
-    return errorResponse(400, 'arguments missing');
+    return errorResponse(400, `arguments missing (chrome ${version})`);
   }
 
   return await render(browser, {
