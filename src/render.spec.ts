@@ -194,8 +194,34 @@ describe('handler with POST', () => {
       {
         url: 'https://www.google.com.au/',
         type: 'pdf',
-        fullPage: false,
-        viewport: { width: 800, height: 600 }
+      }
+    );
+
+    let response: APIGatewayProxyResult;
+    let error;
+    await handler(event, {}, (herror, hresponse) => {
+      response = hresponse;
+      error = herror;
+    });
+
+    expect(response).not.toBeFalsy();
+    expect(response.body).not.toBeFalsy();
+
+    let pdfString = Buffer.from(response.body, 'base64').toString();
+
+    expect(pdfString).toStartWith('%PDF-');
+    expect(error).toBeFalsy();
+    expect(response.isBase64Encoded).toBe(true);
+    expect(response.statusCode).toBe(200);
+  });
+
+  it('render content pdf with POST', async () => {
+    let event = generateEvent(
+      'POST',
+      {},
+      {
+        content: '<h1>Hello</h1><p>world</p>',
+        type: 'pdf',
       }
     );
 

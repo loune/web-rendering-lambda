@@ -121,12 +121,10 @@ async function renderPage(browser: Browser, config: RenderPageConfig, encoding: 
         waitUntil: ['domcontentloaded', 'networkidle0']
       });
     } else {
-      let waiter = page.waitForNavigation({
+      await (page.setContent as any)(config.content, {
         timeout: config.timeout || defaultTimeout,
         waitUntil: ['domcontentloaded', 'networkidle0']
       });
-      await page.setContent(config.content);
-      await waiter;
     }
   } catch (e) {
     if (e.name !== 'TimeoutError') {

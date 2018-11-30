@@ -1,7 +1,13 @@
 {
   "name": "web-rendering-lambda",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Serverless Lambda for rendering webpages to PNG, JPEG and PDF.",
+  "repository": "https://github.com/loune/web-rendering-lambda.git",
+  "author": "Loune Lam",
+  "license": "MIT",
+  "engines": {
+    "node": ">=8.10"
+  },
   "scripts": {
     "package": "yarn package-without-chrome",
     "package-with-chrome": "yarn package-prepare && tar -xzf headless-chromium.tar.gz -C dist && cd dist && ../node_modules/.bin/bestzip ../package.zip .",
@@ -9,14 +15,18 @@
     "package-prepare": "yarn compile-production && cp -r package.json yarn.lock dist && cd dist && PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1 yarn install --production",
     "compile-production": "rm -rf dist && mkdir dist && ./node_modules/.bin/babel src --extensions .ts,.js --out-dir dist",
     "compile-debug": "rm -rf dist && mkdir dist && ./node_modules/.bin/babel src --extensions .ts,.js --out-dir dist --source-maps",
-    "start": "yarn compile-debug && cp -r node_modules dist && node dist/localserver.js",
+    "start": "yarn compile-debug && node dist/localserver.js",
+    "debug": "node --inspect-brk dist/localserver.js",
+    "debug-with-compile": "yarn compile-debug && node --inspect-brk dist/localserver.js",
+    "watch": "yarn nodemon -e ts -w ./src -x yarn start",
+    "watch-debug": "yarn nodemon -e ts -w ./src -x yarn debug-with-compile",
     "lint": "./node_modules/.bin/tsc && eslint --ext .js,.ts src",
     "test": "yarn lint && yarn jest --coverage"
   },
   "dependencies": {
     "archiver": "^3.0.0",
     "base64-stream": "^1.0.0",
-    "puppeteer": "^1.9.0",
+    "puppeteer": "^1.11.0",
     "tar": "^4.4.6"
   },
   "devDependencies": {
@@ -27,7 +37,7 @@
     "@types/aws-lambda": "^8.10.14",
     "@types/jest": "^23.3.7",
     "@types/node": "^10.12.0",
-    "@types/puppeteer": "^1.9.0",
+    "@types/puppeteer": "^1.10.1",
     "aws-sdk": "^2.339.0",
     "bestzip": "^2.1.2",
     "eslint": "^5.7.0",
@@ -35,6 +45,7 @@
     "eslint-config-typescript": "^1.1.0",
     "eslint-plugin-typescript": "^0.12.0",
     "jest": "^23.6.0",
+    "nodemon": "^1.18.7",
     "prettier": "1.14.3",
     "serverless-apigw-binary": "^0.4.4",
     "serverless-hooks-plugin": "^1.1.0",

@@ -7,11 +7,16 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch Program",
-            "program": "${workspaceFolder}/dist/localserver.js",
-            "outFiles": [
-                "${workspaceFolder}/**/*.js"
-            ]
+            "name": "Launch Debug",
+            "runtimeExecutable": "yarn",
+            "runtimeArgs": [
+                "watch-vscode"
+            ],
+            "restart": true,
+            "preLaunchTask": "build",
+            "port": 9229,
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen"
         },
         {
             "type": "node",
