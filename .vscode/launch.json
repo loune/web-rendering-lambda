@@ -10,10 +10,21 @@
             "name": "Launch Debug",
             "runtimeExecutable": "yarn",
             "runtimeArgs": [
-                "watch-vscode"
+                "debug"
+            ],
+            "preLaunchTask": "build",
+            "port": 9229,
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch Debug (watch)",
+            "runtimeExecutable": "yarn",
+            "runtimeArgs": [
+                "watch-debug"
             ],
             "restart": true,
-            "preLaunchTask": "build",
             "port": 9229,
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen"

@@ -24,27 +24,33 @@ interface RenderPageConfigMargin {
   left: string;
 }
 
+interface RenderPageConfigPdf {
+  margin?: RenderPageConfigMargin;
+  width?: string;
+  height?: string;
+  format?: PDFFormat;
+  scale?: number;
+  landscape?: boolean;
+  printBackground?: boolean;
+  headerTemplate?: string;
+  footerTemplate?: string;
+}
+
 interface RenderPageConfig {
   type: 'png' | 'jpeg' | 'pdf';
   url?: string;
-  viewport?: RenderPageConfigViewport;
   content?: string;
+  viewport?: RenderPageConfigViewport;
   jpegQuality?: number;
   fullPage?: boolean;
-  printBackground?: boolean;
   transparentBackground?: boolean;
   media?: 'screen' | 'print';
   timeout?: number;
   saveFilename?: string;
   cookies?: { [name: string]: string };
   headers?: { [name: string]: string };
+  pdf?: RenderPageConfigPdf;
   userAgent?: string;
-  paperMargin?: RenderPageConfigMargin;
-  paperWidth?: string;
-  paperHeight?: string;
-  paperFormat?: PDFFormat;
-  paperScale?: number;
-  landscape?: boolean;
   selector?: string;
 }
 
@@ -145,31 +151,39 @@ async function renderPage(browser: Browser, config: RenderPageConfig, encoding: 
 
     let pdfOptions: PDFOptions = {};
 
-    if (config.paperFormat) {
-      pdfOptions.format = config.paperFormat;
-    }
+    if (config.pdf) {
+      if (config.pdf.format) {
+        pdfOptions.format = config.pdf.format;
+      }
 
-    if (config.landscape) {
-      pdfOptions.landscape = config.landscape;
-    }
+      if (config.pdf.landscape) {
+        pdfOptions.landscape = config.pdf.landscape;
+      }
 
-    if (config.paperScale) {
-      pdfOptions.scale = config.paperScale;
-    }
+      if (config.pdf.scale) {
+        pdfOptions.scale = config.pdf.scale;
+      }
 
-    if (config.paperMargin) {
-      pdfOptions.margin = config.paperMargin;
-    }
+      if (config.pdf.margin) {
+        pdfOptions.margin = config.pdf.margin;
+      }
 
-    if (config.paperWidth) {
-      pdfOptions.width = config.paperWidth;
-    }
+      if (config.pdf.width) {
+        pdfOptions.width = config.pdf.width;
+      }
 
-    if (config.paperHeight) {
-      pdfOptions.height = config.paperHeight;
-    }
+      if (config.pdf.height) {
+        pdfOptions.height = config.pdf.height;
+      }
 
-    pdfOptions.printBackground = config.printBackground === undefined ? true : config.printBackground;
+      if (config.pdf.headerTemplate || config.pdf.footerTemplate) {
+        pdfOptions.displayHeaderFooter = true;
+        pdfOptions.headerTemplate = config.pdf.headerTemplate || ' ';
+        pdfOptions.footerTemplate = config.pdf.footerTemplate || ' ';
+      }
+
+      pdfOptions.printBackground = config.pdf.printBackground === undefined ? true : config.pdf.printBackground;
+    }
 
     let buffer = await page.pdf(pdfOptions);
     result = encoding === 'base64' ? buffer.toString('base64') : buffer;

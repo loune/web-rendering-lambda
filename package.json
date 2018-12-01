@@ -1,6 +1,6 @@
 {
   "name": "web-rendering-lambda",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "Serverless Lambda for rendering webpages to PNG, JPEG and PDF.",
   "repository": "https://github.com/loune/web-rendering-lambda.git",
   "author": "Loune Lam",

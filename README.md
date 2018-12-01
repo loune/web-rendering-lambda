@@ -10,9 +10,9 @@ Clone the respository and run `yarn`, or use `serverless`:
 $ serverless install --url https://github.com/loune/web-rendering-lambda --name my-lambda-project
 ```
 
-## Test Locally
+## Testing Locally
 
-To test the functionality locally, run the provided local node server and access the API at http://localhost:8008/render:
+To test the functionality locally, run the provided local node server and access the API at http://localhost:8008/render
 
 ```bash
 $ yarn start
@@ -73,9 +73,37 @@ An endpoint `/render` is available from the service. If running locally, this is
 
 `POST` takes a JSON body in the form of:
 
-* `type` - `<string>` `(required)` - The file format of render. Can be `png`, `jpeg` or `pdf`. Can also be `zip` (see below).
-* `url` - `<string>` `(required)` - The website URL to render.
-* `fullPage` - `<boolean>` - Specify `true` to render the full page instead of the view port only.
+* `type` `<string>` `(required)` - The file format of render. Can be `png`, `jpeg` or `pdf`. Can also be `zip` (see below).
+* `url` `<string>` - The website URL to render. Either this or `content` must be supplied.
+* `content` `<string>` - The HTML content to render. Either this or `url` must be supplied.
+* `viewport` - Object containing browser view port information.
+  * `width` `<number>` - Width of view port in pixels.
+  * `height` `<number>` - Height of view port in pixels.
+  * `deviceScaleFactor` `<number>` - Scale of image to render.
+* `fullPage` `<boolean>` - Specify `true` to render the full page instead of the view port only. Only applies to images, not PDFs.
+* `selector` `string` - CSS selector to render a specific DOM element on the page.
+* `jpegQuality` `<number>` - JPEG quality from 0-100.
+* `transparentBackground` `<boolean>` - Whether image should have transparent background (for PNGs) or the default white background.
+* `media` `<string>` - CSS media to use with render. Either `screen` or `print`. Images are defaulted to `screen` while PDFs are `print`.
+* `timeout` `<number>` - Number of milliseconds to wait for the page to finish loading. Maximum of 30000 (30 seconds) due to API gateway limits.
+* `saveFilename` `<string>` - The file name to specify in the response headers.
+* `cookies` `<object>` - Cookies to include in the request.
+* `headers` `<object>` - Headers to include in the request.
+* `pdf` - PDF specific options. see - [Puppeteer docs](https://github.com/GoogleChrome/puppeteer/blob/master/docs/api.md#pagepdfoptions)
+  * `width` `<string>` - The page width.
+  * `height` `<string>` - The page height.
+  * `margin` - The page margin.
+    * `top` `<string>` - The top margin. (e.g. `2cm`)
+    * `left` `<string>` - The left margin.
+    * `bottom` `<string>` - The bottom margin.
+    * `right` `<string>` - The right margin.
+  * `format` - Page format eg. `A4`, see - [Puppeteer docs](https://github.com/GoogleChrome/puppeteer/blob/master/docs/api.md#pagepdfoptions)
+  * `scale` `<number>` - Render scale.
+  * `landscape` - Controls whether the page is in landscape.
+  * `printBackground` `<boolean>` - Include backgrounds in the PDF. `true` by default.
+  * `headerTemplate` `<string>` - HTML template string for header.
+  * `footerTemplate` `<string>` - HTML template string for footer.
+* `userAgent` `string` - User agent string to send.
 
 ### Examples
 
