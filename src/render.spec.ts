@@ -5,6 +5,15 @@ import unzip from 'unzip-stream';
 import { handler, RenderConfig, Query } from './render';
 import { closeBrowser } from './chrome';
 
+declare global {
+  // eslint-disable-next-line
+  namespace jest {
+    interface Matchers<R> {
+      toStartWith: (prefix: string) => R;
+    }
+  }
+}
+
 jest.setTimeout(30000);
 
 afterAll(() => {
@@ -23,15 +32,6 @@ function toStartWith(this: jest.MatcherUtils, received: string, prefix: string):
       message: () => `expected ${received.substring(0, 100)} to start with ${prefix}`,
       pass: false
     };
-  }
-}
-
-declare global {
-  // eslint-disable-next-line
-  namespace jest {
-    interface Matchers<R> {
-      toStartWith: (prefix: string) => R;
-    }
   }
 }
 
@@ -193,7 +193,7 @@ describe('handler with POST', () => {
       {},
       {
         url: 'https://www.google.com.au/',
-        type: 'pdf',
+        type: 'pdf'
       }
     );
 
@@ -221,7 +221,7 @@ describe('handler with POST', () => {
       {},
       {
         content: '<h1>Hello</h1><p>world</p>',
-        type: 'pdf',
+        type: 'pdf'
       }
     );
 
@@ -284,11 +284,12 @@ describe('handler with POST', () => {
     stream.push(zipBuffer);
     stream.push(null);
 
-    let fileNames = [ 'yahoo.png', 'amazon.jpg', 'google.pdf' ];
+    let fileNames = ['yahoo.png', 'amazon.jpg', 'google.pdf'];
     let i = 0;
     await new Promise((resolve, reject) => {
-      stream.pipe(unzip.Parse())
-        .on('entry', (entry) => {
+      stream
+        .pipe(unzip.Parse())
+        .on('entry', entry => {
           var filePath = entry.path;
 
           expect(filePath).toBe(fileNames[i]);
@@ -302,7 +303,6 @@ describe('handler with POST', () => {
     expect(error).toBeFalsy();
     expect(response.isBase64Encoded).toBe(true);
     expect(response.statusCode).toBe(200);
-
   });
 
   it('errors when no body with POST', async () => {
