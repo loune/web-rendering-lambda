@@ -1,0 +1,6 @@
+.serverless
+.vscode
+coverage
+node_modules
+dist
+headless-chromium.tar.gz

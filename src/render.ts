@@ -1,6 +1,6 @@
 import { APIGatewayProxyResult, APIGatewayEvent } from 'aws-lambda';
 import { Browser, ScreenshotOptions, ElementHandle, PDFOptions, PDFFormat } from 'puppeteer';
-import { getBrowser, closeBrowser, version } from './chrome';
+import { getBrowser, closeBrowser, version, BrowserMode } from './chrome';
 import { archiveBase64, archiveToS3, saveToS3 } from './archive';
 
 export interface Query {
@@ -73,7 +73,7 @@ enum formatContentType {
   zip = 'application/zip',
   pdf = 'application/pdf',
   png = 'image/png',
-  jpeg = 'image/jpeg'
+  jpeg = 'image/jpeg',
 }
 
 const defaultTimeout = 10000;
@@ -81,7 +81,11 @@ const defaultViewportWidth = 1280;
 const defaultViewportHeight = 800;
 const defaultViewportdeviceScaleFactor = 1;
 
-async function renderPage(browser: Browser, config: RenderPageConfig, encoding: 'base64' | 'binary'): Promise<string | Buffer> {
+async function renderPage(
+  browser: Browser,
+  config: RenderPageConfig,
+  encoding: 'base64' | 'binary'
+): Promise<string | Buffer> {
   const page = await browser.newPage();
 
   // clear cookies
@@ -91,13 +95,13 @@ async function renderPage(browser: Browser, config: RenderPageConfig, encoding: 
     await page.setViewport({
       width: Number(config.viewport.width) || defaultViewportWidth,
       height: Number(config.viewport.height) || defaultViewportHeight,
-      deviceScaleFactor: Number(config.viewport.deviceScaleFactor) || defaultViewportdeviceScaleFactor
+      deviceScaleFactor: Number(config.viewport.deviceScaleFactor) || defaultViewportdeviceScaleFactor,
     });
   } else {
     await page.setViewport({
       width: defaultViewportWidth,
       height: defaultViewportHeight,
-      deviceScaleFactor: defaultViewportdeviceScaleFactor
+      deviceScaleFactor: defaultViewportdeviceScaleFactor,
     });
   }
 
@@ -124,12 +128,12 @@ async function renderPage(browser: Browser, config: RenderPageConfig, encoding: 
     if (config.url) {
       await page.goto(config.url, {
         timeout: config.timeout || defaultTimeout,
-        waitUntil: ['domcontentloaded', 'networkidle0']
+        waitUntil: ['domcontentloaded', 'networkidle0'],
       });
     } else {
       await (page.setContent as any)(config.content, {
         timeout: config.timeout || defaultTimeout,
-        waitUntil: ['domcontentloaded', 'networkidle0']
+        waitUntil: ['domcontentloaded', 'networkidle0'],
       });
     }
   } catch (e) {
@@ -217,9 +221,9 @@ function errorResponse(statusCode: number, message: string): APIGatewayProxyResu
     statusCode: statusCode,
     body: Buffer.from(message, 'utf8').toString('base64'),
     headers: {
-      'content-type': 'text/plain'
+      'content-type': 'text/plain',
     },
-    isBase64Encoded: true
+    isBase64Encoded: true,
   };
 }
 
@@ -247,7 +251,7 @@ export const render = async (browser: Browser, config: RenderConfig): Promise<AP
         headers: {
           'content-type': 'text/plain',
         },
-        isBase64Encoded: true
+        isBase64Encoded: true,
       };
     }
 
@@ -264,7 +268,7 @@ export const render = async (browser: Browser, config: RenderConfig): Promise<AP
         headers: {
           'content-type': 'text/plain',
         },
-        isBase64Encoded: true
+        isBase64Encoded: true,
       };
     }
     resultB64 = await renderPage(browser, config, 'base64');
@@ -281,9 +285,9 @@ export const render = async (browser: Browser, config: RenderConfig): Promise<AP
     body: resultB64,
     headers: {
       'content-type': formatContentType[config.type],
-      ...additionalHeaders
+      ...additionalHeaders,
     },
-    isBase64Encoded: true
+    isBase64Encoded: true,
   };
 
   return response;
@@ -319,7 +323,7 @@ async function get(query: Query, browser): Promise<APIGatewayProxyResult> {
     url: query.url,
     type: query.type,
     viewport: { width: query.width, height: query.height },
-    fullPage: query.fullpage
+    fullPage: query.fullpage,
   });
 }
 
@@ -339,9 +343,13 @@ async function handleEvent(event: any, browser: any): Promise<APIGatewayProxyRes
 }
 
 export const handler = async (event: APIGatewayEvent, context, callback): Promise<void> => {
-  const isLambda = event.requestContext.accountId !== undefined;
+  let browserMode: BrowserMode = 'local';
+  if (event.requestContext.accountId !== undefined) {
+    browserMode = event.requestContext.accountId === 'docker' ? 'docker' : 'lambda';
+  }
+
   context.callbackWaitsForEmptyEventLoop = false;
-  const browser = await getBrowser(isLambda);
+  const browser = await getBrowser(browserMode);
   try {
     let response = await handleEvent(event, browser);
     callback(null, response);

@@ -4,6 +4,8 @@ import * as fs from 'fs';
 import tar from 'tar';
 import * as aws from 'aws-sdk';
 
+export type BrowserMode = 'lambda' | 'docker' | 'local';
+
 const chromeS3Bucket = 'your-bucket-here';
 const chromeTgzFilename = 'headless-chromium.tar.gz';
 const chromeExeFilname = 'headless-chromium';
@@ -14,7 +16,7 @@ const launchOptionForLambda = [
   // error when launch(); Failed to load libosmesa.so
   '--disable-gpu',
   // freeze when newPage()
-  '--single-process'
+  '--single-process',
 ];
 
 let browser = null;
@@ -25,7 +27,7 @@ export async function closeBrowser(): Promise<void> {
     if (browser) {
       await browser.close();
     }
-  } catch(e) {
+  } catch (e) {
     console.error(e);
   }
 
@@ -41,7 +43,7 @@ async function browserOk(browser: puppeteer.Browser): Promise<boolean> {
   try {
     version = await browser.version();
     return true;
-  } catch(e) {
+  } catch (e) {
     closeBrowser();
   }
 
@@ -73,7 +75,7 @@ export async function findChrome(isLambda): Promise<string> {
         .on('error', err => reject(err))
         .pipe(
           tar.x({
-            C: tmpPath
+            C: tmpPath,
           })
         )
         .on('error', err => reject(err))
@@ -82,21 +84,21 @@ export async function findChrome(isLambda): Promise<string> {
 
     return chromePathTmp;
   }
-  
+
   if (chromeS3Bucket) {
     const s3 = new aws.S3({ apiVersion: '2006-03-01' });
     // s3
     await new Promise((resolve, reject) => {
       const params = {
         Bucket: chromeS3Bucket,
-        Key: chromeTgzFilename
+        Key: chromeTgzFilename,
       };
       s3.getObject(params)
         .createReadStream()
         .on('error', err => reject(err))
         .pipe(
           tar.x({
-            C: tmpPath
+            C: tmpPath,
           })
         )
         .on('error', err => reject(err))
@@ -108,19 +110,19 @@ export async function findChrome(isLambda): Promise<string> {
   return undefined;
 }
 
-export async function getBrowser(isLambda: boolean): Promise<puppeteer.Browser> {
+export async function getBrowser(mode: BrowserMode): Promise<puppeteer.Browser> {
   if (await browserOk(browser)) {
     return browser;
   }
 
-  let executablePath = await findChrome(isLambda);
+  let executablePath = await findChrome(mode === 'lambda');
 
   browser = await puppeteer.launch({
     headless: true,
     defaultViewport: null,
     dumpio: false,
-    executablePath: isLambda ? executablePath : undefined,
-    args: isLambda ? launchOptionForLambda : undefined
+    executablePath: mode === 'lambda' ? executablePath : undefined,
+    args: mode === 'lambda' || mode === 'docker' ? launchOptionForLambda : undefined,
   });
 
   return browser;
