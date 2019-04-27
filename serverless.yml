@@ -1,18 +1,18 @@
-service: web-rendering-lambda
+service: web-rendering
 
 provider:
   name: aws
   stage: dev
-  region: us-east-1
+  region: us-west-2
   runtime: nodejs8.10
   memorySize: 1536
   timeout: 30
   # S3 upload
   iamRoleStatements:
-   -  Effect: "Allow"
+    - Effect: 'Allow'
       Action:
-        - "s3:PutObject"
-      Resource: "arn:aws:s3:::*"
+        - '*'
+      Resource: 'arn:aws:s3:::*'
 
 functions:
   render:
@@ -32,7 +32,7 @@ functions:
 
 package:
   artifact: ./package.zip
-  
+
 plugins:
   - serverless-apigw-binary
   - serverless-hooks-plugin
