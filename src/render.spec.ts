@@ -25,12 +25,12 @@ function toStartWith(this: jest.MatcherUtils, received: string, prefix: string):
   if (pass) {
     return {
       message: () => `expected ${received.substring(0, 100)} not to start with ${prefix}`,
-      pass: true
+      pass: true,
     };
   } else {
     return {
       message: () => `expected ${received.substring(0, 100)} to start with ${prefix}`,
-      pass: false
+      pass: false,
     };
   }
 }
@@ -47,8 +47,8 @@ function generateEvent(httpMethod, queryParams, body: RenderConfig): APIGatewayP
     queryStringParameters: queryParams,
     requestContext: {
       httpMethod: httpMethod,
-      path: '/render'
-    }
+      path: '/render',
+    },
   };
 
   return event;
@@ -116,7 +116,7 @@ describe('handler with POST', () => {
         url: 'https://www.google.com.au/',
         type: 'png',
         fullPage: false,
-        viewport: { width: 800, height: 600 }
+        viewport: { width: 800, height: 600 },
       }
     );
 
@@ -143,7 +143,7 @@ describe('handler with POST', () => {
         type: 'jpeg',
         jpegQuality: 50,
         fullPage: true,
-        viewport: { width: 1280, height: 600 }
+        viewport: { width: 1280, height: 600 },
       }
     );
 
@@ -169,7 +169,7 @@ describe('handler with POST', () => {
         url: 'https://www.google.com.au/',
         type: 'png',
         selector: 'body',
-        viewport: { width: 1280, height: 600 }
+        viewport: { width: 1280, height: 600 },
       }
     );
 
@@ -193,7 +193,7 @@ describe('handler with POST', () => {
       {},
       {
         url: 'https://www.google.com.au/',
-        type: 'pdf'
+        type: 'pdf',
       }
     );
 
@@ -221,7 +221,7 @@ describe('handler with POST', () => {
       {},
       {
         content: '<h1>Hello</h1><p>world</p>',
-        type: 'pdf'
+        type: 'pdf',
       }
     );
 
@@ -256,16 +256,16 @@ describe('handler with POST', () => {
             type: 'jpeg',
             jpegQuality: 50,
             fullPage: true,
-            saveFilename: 'amazon.jpg'
+            saveFilename: 'amazon.jpg',
           },
           {
             url: 'https://www.google.com.au/',
             type: 'pdf',
             jpegQuality: 50,
             fullPage: true,
-            saveFilename: 'google.pdf'
-          }
-        ]
+            saveFilename: 'google.pdf',
+          },
+        ],
       }
     );
 
@@ -326,7 +326,7 @@ describe('handler with POST', () => {
     let event = generateEvent(
       'POST',
       {
-        url: 'https://www.google.com.au/'
+        url: 'https://www.google.com.au/',
       },
       null
     );

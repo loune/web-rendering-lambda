@@ -6,7 +6,7 @@ import * as aws from 'aws-sdk';
 
 function getArchive(buffers: Map<string, Buffer>, pipeOutput: Stream, resolve: () => void, reject: (err) => void): any {
   let archive = archiver('zip', {
-    zlib: { level: 9 }
+    zlib: { level: 9 },
   });
 
   archive.on('warning', err => {
