@@ -55,6 +55,24 @@ function generateEvent(httpMethod, queryParams, body: RenderConfig): APIGatewayP
 }
 
 describe('handler with get', () => {
+  it('warms up chrome', async () => {
+    let event = generateEvent('GET', { warm: '1' }, null);
+
+    let response: APIGatewayProxyResult;
+    let error;
+    await handler(event, {}, (herror, hresponse) => {
+      response = hresponse;
+      error = herror;
+    });
+
+    expect(response).not.toBeFalsy();
+    expect(response.body).not.toBeFalsy();
+    expect(error).toBeFalsy();
+    expect(response.isBase64Encoded).toBe(true);
+    expect(response.statusCode).toBe(200);
+    expect(Buffer.from(response.body, 'base64').toString()).toStartWith('Warmed up chrome');
+  });
+
   it('render google with GET', async () => {
     let event = generateEvent('GET', { url: 'https://www.google.com.au/', type: 'png' }, null);
 
