@@ -9,6 +9,8 @@ export interface Query {
   width?: number;
   height?: number;
   fullpage?: boolean;
+  /** warm up the browser */
+  warm?: any;
 }
 
 interface RenderPageConfigViewport {
@@ -317,6 +319,17 @@ async function post(bodyStr: string, browser: Browser): Promise<APIGatewayProxyR
 async function get(query: Query, browser): Promise<APIGatewayProxyResult> {
   if (!query) {
     return errorResponse(400, `arguments missing (chrome ${version})`);
+  }
+
+  if (query.warm) {
+    return {
+      statusCode: 200,
+      body: Buffer.from(`Warmed up chrome ${version}`, 'utf8').toString('base64'),
+      headers: {
+        'content-type': 'text/plain',
+      },
+      isBase64Encoded: true,
+    };
   }
 
   return await render(browser, {
