@@ -111,12 +111,37 @@ export async function findChrome(isLambda): Promise<string> {
   return undefined;
 }
 
-export async function getBrowser(mode: BrowserMode): Promise<puppeteer.Browser> {
+function copyPackagedFonts(): void {
+  if (process.env.HOME === undefined) {
+    process.env.HOME = '/tmp';
+  }
+
+  const home = process.env.HOME;
+  const srcFontDir = path.join(__dirname, 'fonts');
+  const destFontDir = path.join(home, '.fonts');
+  if (fs.existsSync(srcFontDir) !== true) {
+    return;
+  }
+  if (fs.existsSync(destFontDir) !== true) {
+    fs.mkdirSync(destFontDir);
+  }
+
+  const fontFiles = fs.readdirSync(srcFontDir);
+  fontFiles.forEach(f => fs.copyFileSync(path.join(srcFontDir, f), path.join(destFontDir, f.replace(' ', '+'))));
+}
+
+export async function getBrowser(mode: BrowserMode, externalFontUrls: string[] = null): Promise<puppeteer.Browser> {
   if (await browserOk(browser)) {
     return browser;
   }
 
   if (mode === 'lambda') {
+    // load fonts
+    copyPackagedFonts();
+    if (externalFontUrls) {
+      await Promise.all(externalFontUrls.map(url => chromiumLambda.font(url)));
+    }
+
     browser = await chromiumLambda.puppeteer.launch({
       args: chromiumLambda.args,
       defaultViewport: chromiumLambda.defaultViewport,
