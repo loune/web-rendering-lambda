@@ -131,7 +131,7 @@ async function renderPage(
         waitUntil: ['domcontentloaded', 'networkidle0'],
       });
     } else {
-      await (page.setContent as any)(config.content, {
+      await page.setContent(config.content, {
         timeout: config.timeout || defaultTimeout,
         waitUntil: ['domcontentloaded', 'networkidle0'],
       });
