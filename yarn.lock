@@ -1439,6 +1439,11 @@ chownr@^1.1.1:
   resolved "https://registry.yarnpkg.com/chownr/-/chownr-1.1.1.tgz#54726b8b8fff4df053c42187e801fb4412df1494"
   integrity sha512-j38EvO5+LHX84jlo6h4UzmOwi0UgW61WRyPtJz4qaadK5eY3BTS5TY/S1Stc3Uk2lIM6TPevAlULiEJwie860g==
 
+chrome-aws-lambda@^1.18.0:
+  version "1.18.0"
+  resolved "https://registry.yarnpkg.com/chrome-aws-lambda/-/chrome-aws-lambda-1.18.0.tgz#9d67f69c962ba9d48e4aedab3f8cc724d077e47a"
+  integrity sha512-piEn6r/a38v6mDis79jaMTA5NpPbnct3J1hE8IgZgAWF3jH5uW63WYZ1Kxg/kaQ7U4Vl0V9FCrJTE0BfJRGsJA==
+
 ci-info@^1.5.0:
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/ci-info/-/ci-info-1.6.0.tgz#2ca20dbb9ceb32d4524a683303313f0304b1e497"

@@ -1,4 +1,5 @@
 import puppeteer from 'puppeteer';
+import chromiumLambda from 'chrome-aws-lambda';
 import * as path from 'path';
 import * as fs from 'fs';
 import tar from 'tar';
@@ -115,15 +116,24 @@ export async function getBrowser(mode: BrowserMode): Promise<puppeteer.Browser> 
     return browser;
   }
 
-  let executablePath = await findChrome(mode === 'lambda');
+  if (mode === 'lambda') {
+    browser = await chromiumLambda.puppeteer.launch({
+      args: chromiumLambda.args,
+      defaultViewport: chromiumLambda.defaultViewport,
+      executablePath: await chromiumLambda.executablePath,
+      headless: chromiumLambda.headless,
+    });
+  } else {
+    let executablePath = await findChrome(false);
 
-  browser = await puppeteer.launch({
-    headless: true,
-    defaultViewport: null,
-    dumpio: false,
-    executablePath: mode === 'lambda' ? executablePath : undefined,
-    args: mode === 'lambda' || mode === 'docker' ? launchOptionForLambda : undefined,
-  });
+    browser = await puppeteer.launch({
+      headless: true,
+      defaultViewport: null,
+      dumpio: false,
+      executablePath: executablePath,
+      args: mode === 'docker' ? launchOptionForLambda : undefined,
+    });
+  }
 
   return browser;
 }
