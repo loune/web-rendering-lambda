@@ -10,7 +10,7 @@ export interface Query {
   height?: number;
   fullpage?: boolean;
   /** warm up the browser */
-  warm?: any;
+  warm?: string;
 }
 
 interface RenderPageConfigViewport {
@@ -57,12 +57,14 @@ interface RenderPageConfig {
 }
 
 interface RenderOnlyPageConfig extends RenderPageConfig {
+  encoding?: 'raw' | 'base64';
   saveS3Bucket?: string;
   saveS3Region?: string;
 }
 
 interface RenderMultiplePageConfig {
   type: 'zip';
+  encoding?: 'raw' | 'base64';
   pages: RenderPageConfig[];
   saveFilename?: string;
   saveS3Bucket?: string;
@@ -282,14 +284,15 @@ export const render = async (browser: Browser, config: RenderConfig): Promise<AP
     additionalHeaders = { 'Content-Disposition': `attachment; filename="${config.saveFilename}"` };
   }
 
+  let sendB64 = config.encoding === 'base64';
   const response = {
     statusCode: 200,
     body: resultB64,
     headers: {
-      'content-type': formatContentType[config.type],
+      'content-type': !sendB64 ? formatContentType[config.type] : 'text/plain',
       ...additionalHeaders,
     },
-    isBase64Encoded: true,
+    isBase64Encoded: !sendB64,
   };
 
   return response;

@@ -31,15 +31,17 @@ http
           },
         };
 
-        handler(event as any, {}, (error, responseObj) => {
+        handler(event as any, {}, (error, renderResult) => {
           if (error) {
             response.writeHead(500);
             response.end(error.message);
             return;
           }
 
-          response.writeHead(responseObj.statusCode, responseObj.headers);
-          let buf = Buffer.from(responseObj.body, 'base64');
+          response.writeHead(renderResult.statusCode, renderResult.headers);
+          const buf = renderResult.isBase64Encoded
+            ? Buffer.from(renderResult.body, 'base64')
+            : Buffer.from(renderResult.body);
           response.write(buf);
           response.end();
         });

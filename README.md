@@ -130,6 +130,11 @@ An endpoint `/render` is available from the service. If running locally or on Do
   - `headerTemplate` `<string>` - HTML template string for header.
   - `footerTemplate` `<string>` - HTML template string for footer.
 - `userAgent` `string` - User agent string to send.
+- `encoding` `string` - `raw` binary (default) or `base64` encoded output response.
+
+### Custom Fonts
+
+You can include custom fonts by creating a `fonts` folder in the project root, and copying custom fonts into that directory. Please note the custom fonts and the application files should not exceed the Lambda limit of 50 MB after compression.
 
 ### Examples
 
