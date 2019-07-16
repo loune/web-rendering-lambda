@@ -60,10 +60,11 @@ describe('handler with get', () => {
 
     let response: APIGatewayProxyResult;
     let error;
-    await handler(event, {}, (herror, hresponse) => {
-      response = hresponse;
-      error = herror;
-    });
+    try {
+      response = await handler(event, {});
+    } catch (err) {
+      error = err;
+    }
 
     expect(response).not.toBeFalsy();
     expect(response.body).not.toBeFalsy();
@@ -78,10 +79,11 @@ describe('handler with get', () => {
 
     let response: APIGatewayProxyResult;
     let error;
-    await handler(event, {}, (herror, hresponse) => {
-      response = hresponse;
-      error = herror;
-    });
+    try {
+      response = await handler(event, {});
+    } catch (err) {
+      error = err;
+    }
 
     expect(response).not.toBeFalsy();
     expect(response.body).not.toBeFalsy();
@@ -95,10 +97,11 @@ describe('handler with get', () => {
 
     let response: APIGatewayProxyResult;
     let error;
-    await handler(event, {}, (herror, hresponse) => {
-      response = hresponse;
-      error = herror;
-    });
+    try {
+      response = await handler(event, {});
+    } catch (err) {
+      error = err;
+    }
 
     expect(response).not.toBeFalsy();
     expect(response.body).not.toBeFalsy();
@@ -112,10 +115,12 @@ describe('handler with get', () => {
 
     let response: APIGatewayProxyResult;
     let error;
-    await handler(event, { url: 'https://www.google.com.au/' }, (herror, hresponse) => {
-      response = hresponse;
-      error = herror;
-    });
+
+    try {
+      response = await handler(event, { url: 'https://www.google.com.au/' });
+    } catch (err) {
+      error = err;
+    }
 
     expect(response).not.toBeFalsy();
     expect(response.body).not.toBeFalsy();
@@ -140,10 +145,11 @@ describe('handler with POST', () => {
 
     let response: APIGatewayProxyResult;
     let error;
-    await handler(event, {}, (herror, hresponse) => {
-      response = hresponse;
-      error = herror;
-    });
+    try {
+      response = await handler(event, {});
+    } catch (err) {
+      error = err;
+    }
 
     expect(response).not.toBeFalsy();
     expect(response.body).not.toBeFalsy();
@@ -167,10 +173,11 @@ describe('handler with POST', () => {
 
     let response: APIGatewayProxyResult;
     let error;
-    await handler(event, {}, (herror, hresponse) => {
-      response = hresponse;
-      error = herror;
-    });
+    try {
+      response = await handler(event, {});
+    } catch (err) {
+      error = err;
+    }
 
     expect(response).not.toBeFalsy();
     expect(response.body).not.toBeFalsy();
@@ -194,10 +201,11 @@ describe('handler with POST', () => {
 
     let response: APIGatewayProxyResult;
     let error;
-    await handler(event, {}, (herror, hresponse) => {
-      response = hresponse;
-      error = herror;
-    });
+    try {
+      response = await handler(event, {});
+    } catch (err) {
+      error = err;
+    }
 
     expect(response).not.toBeFalsy();
     expect(response.body).not.toBeFalsy();
@@ -220,10 +228,11 @@ describe('handler with POST', () => {
 
     let response: APIGatewayProxyResult;
     let error;
-    await handler(event, {}, (herror, hresponse) => {
-      response = hresponse;
-      error = herror;
-    });
+    try {
+      response = await handler(event, {});
+    } catch (err) {
+      error = err;
+    }
 
     expect(response).not.toBeFalsy();
     expect(response.body).not.toBeFalsy();
@@ -244,10 +253,11 @@ describe('handler with POST', () => {
 
     let response: APIGatewayProxyResult;
     let error;
-    await handler(event, {}, (herror, hresponse) => {
-      response = hresponse;
-      error = herror;
-    });
+    try {
+      response = await handler(event, {});
+    } catch (err) {
+      error = err;
+    }
 
     expect(response).not.toBeFalsy();
     expect(response.body).not.toBeFalsy();
@@ -272,10 +282,11 @@ describe('handler with POST', () => {
 
     let response: APIGatewayProxyResult;
     let error;
-    await handler(event, {}, (herror, hresponse) => {
-      response = hresponse;
-      error = herror;
-    });
+    try {
+      response = await handler(event, {});
+    } catch (err) {
+      error = err;
+    }
 
     expect(response).not.toBeFalsy();
     expect(response.body).not.toBeFalsy();
@@ -316,10 +327,11 @@ describe('handler with POST', () => {
 
     let response: APIGatewayProxyResult;
     let error;
-    await handler(event, {}, (herror, hresponse) => {
-      response = hresponse;
-      error = herror;
-    });
+    try {
+      response = await handler(event, {});
+    } catch (err) {
+      error = err;
+    }
 
     expect(response).not.toBeFalsy();
     expect(response.body).not.toBeFalsy();
@@ -355,10 +367,11 @@ describe('handler with POST', () => {
 
     let response: APIGatewayProxyResult;
     let error;
-    await handler(event, {}, (herror, hresponse) => {
-      response = hresponse;
-      error = herror;
-    });
+    try {
+      response = await handler(event, {});
+    } catch (err) {
+      error = err;
+    }
 
     expect(response).not.toBeFalsy();
     expect(response.body).not.toBeFalsy();
@@ -378,10 +391,11 @@ describe('handler with POST', () => {
 
     let response: APIGatewayProxyResult;
     let error;
-    await handler(event, { url: 'https://www.google.com.au/' }, (herror, hresponse) => {
-      response = hresponse;
-      error = herror;
-    });
+    try {
+      response = await handler(event, {});
+    } catch (err) {
+      error = err;
+    }
 
     expect(response).not.toBeFalsy();
     expect(response.body).not.toBeFalsy();

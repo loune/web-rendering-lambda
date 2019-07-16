@@ -358,7 +358,7 @@ async function handleEvent(event: any, browser: any): Promise<APIGatewayProxyRes
   return response;
 }
 
-export const handler = async (event: APIGatewayEvent, context, callback): Promise<void> => {
+export const handler = async (event: APIGatewayEvent, context): Promise<APIGatewayProxyResult> => {
   let browserMode: BrowserMode = 'local';
   if (event.requestContext.accountId !== undefined) {
     browserMode = event.requestContext.accountId === 'docker' ? 'docker' : 'lambda';
@@ -368,16 +368,16 @@ export const handler = async (event: APIGatewayEvent, context, callback): Promis
   const browser = await getBrowser(browserMode);
   try {
     let response = await handleEvent(event, browser);
-    callback(null, response);
+    return response;
   } catch (e) {
     closeBrowser();
 
     if (e.message.includes('Protocol error') && !(event as any).isOurRetry) {
       console.warn(`Error ${e}. Retrying...`);
-      await handler({ ...event, isOurRetry: true } as any, context, callback);
+      return await handler({ ...event, isOurRetry: true } as any, context);
     } else {
       console.error(`Error ${e}.`);
-      callback(e);
+      throw e;
     }
   }
 };
