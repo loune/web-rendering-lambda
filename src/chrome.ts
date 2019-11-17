@@ -56,15 +56,15 @@ export async function findChrome(isLambda): Promise<string> {
     return undefined;
   }
 
-  let tmpPath = '/tmp';
-  let chromePathUncompressed = path.join(__dirname, chromeExeFilname);
+  const tmpPath = '/tmp';
+  const chromePathUncompressed = path.join(__dirname, chromeExeFilname);
 
   if (fs.existsSync(chromePathUncompressed)) {
     return chromePathUncompressed;
   }
 
-  let chromePathTmp = path.join(tmpPath, chromeExeFilname);
-  let chromePathTgz = path.join(__dirname, chromeTgzFilename);
+  const chromePathTmp = path.join(tmpPath, chromeExeFilname);
+  const chromePathTgz = path.join(__dirname, chromeTgzFilename);
 
   if (fs.existsSync(chromePathTmp)) {
     return chromePathTmp;
@@ -149,7 +149,7 @@ export async function getBrowser(mode: BrowserMode, externalFontUrls: string[] =
       headless: chromiumLambda.headless,
     });
   } else {
-    let executablePath = await findChrome(false);
+    const executablePath = await findChrome(false);
 
     browser = await puppeteer.launch({
       headless: true,

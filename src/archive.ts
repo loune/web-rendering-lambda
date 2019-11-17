@@ -5,7 +5,7 @@ import { Base64Encode } from 'base64-stream';
 import * as aws from 'aws-sdk';
 
 function getArchive(buffers: Map<string, Buffer>, pipeOutput: Stream, resolve: () => void, reject: (err) => void): any {
-  let archive = archiver('zip', {
+  const archive = archiver('zip', {
     zlib: { level: 9 },
   });
 
@@ -39,7 +39,7 @@ export async function archive(buffers: Map<string, Buffer>, output: Stream): Pro
 
 export async function archiveFile(buffers: Map<string, Buffer>, filename: string): Promise<void> {
   return new Promise<void>((resolve, reject) => {
-    let output = fs.createWriteStream(filename);
+    const output = fs.createWriteStream(filename);
     output.on('close', () => {
       //console.log(`Finished zipping`);
       resolve();
@@ -51,9 +51,9 @@ export async function archiveFile(buffers: Map<string, Buffer>, filename: string
 
 export async function archiveBase64(buffers: Map<string, Buffer>): Promise<string> {
   return new Promise<string>((resolve, reject) => {
-    let strings = [];
-    let output = new Stream.PassThrough();
-    let outputToB64 = new Base64Encode();
+    const strings = [];
+    const output = new Stream.PassThrough();
+    const outputToB64 = new Base64Encode();
 
     output.on('data', data => {
       strings.push(data.toString());
@@ -77,7 +77,7 @@ export async function archiveToS3(
 ): Promise<aws.S3.ManagedUpload.SendData> {
   const s3 = new aws.S3({ apiVersion: '2006-03-01', region: s3Region });
   return await new Promise<aws.S3.ManagedUpload.SendData>((resolve, reject) => {
-    let archive = getArchive(buffers, null, () => {}, reject);
+    const archive = getArchive(buffers, null, () => {}, reject);
     s3.upload({ Bucket: s3Bucket, Key: s3Key, Body: archive }, (error, data) => {
       if (error) {
         reject(error);
@@ -96,7 +96,7 @@ export async function saveToS3(
 ): Promise<aws.S3.ManagedUpload.SendData> {
   const s3 = new aws.S3({ apiVersion: '2006-03-01', region: s3Region });
   return await new Promise<aws.S3.ManagedUpload.SendData>((resolve, reject) => {
-    let stream = new Stream.Duplex();
+    const stream = new Stream.Duplex();
     stream.push(buffer);
     stream.push(null);
     s3.upload({ Bucket: s3Bucket, Key: s3Key, Body: stream }, (error, data) => {

@@ -157,7 +157,7 @@ async function renderPage(
       throw new Error('selector not compatible with type pdf');
     }
 
-    let pdfOptions: PDFOptions = {};
+    const pdfOptions: PDFOptions = {};
 
     if (config.pdf) {
       if (config.pdf.format) {
@@ -193,10 +193,10 @@ async function renderPage(
       pdfOptions.printBackground = config.pdf.printBackground === undefined ? true : config.pdf.printBackground;
     }
 
-    let buffer = await page.pdf(pdfOptions);
+    const buffer = await page.pdf(pdfOptions);
     result = encoding === 'base64' ? buffer.toString('base64') : buffer;
   } else {
-    let options: ScreenshotOptions = {
+    const options: ScreenshotOptions = {
       encoding,
       type: config.type,
       fullPage: config.fullPage,
@@ -242,7 +242,7 @@ export const render = async (browser: Browser, config: RenderConfig): Promise<AP
     console.log(`Rendering ${config.pages.length} URLs to ${config.type}`);
 
     const bufs = await Promise.all(config.pages.map(page => renderPage(browser, page, 'binary')));
-    let bufMap = new Map<string, Buffer>();
+    const bufMap = new Map<string, Buffer>();
     bufs.forEach((value, i) =>
       bufMap.set(config.pages[i].saveFilename || `file${i}.${config.pages[i].type}`, value as Buffer)
     );
@@ -264,7 +264,7 @@ export const render = async (browser: Browser, config: RenderConfig): Promise<AP
   } else if (['jpeg', 'png', 'pdf'].includes(config.type)) {
     console.log(`Rendering ${config.url || 'content'} to ${config.type}`);
     if (config.saveS3Bucket) {
-      let result = await renderPage(browser, config, 'binary');
+      const result = await renderPage(browser, config, 'binary');
       await saveToS3(result as Buffer, config.saveFilename, config.saveS3Bucket, config.saveS3Region);
       return {
         statusCode: 200,
@@ -284,7 +284,7 @@ export const render = async (browser: Browser, config: RenderConfig): Promise<AP
     additionalHeaders = { 'Content-Disposition': `attachment; filename="${config.saveFilename}"` };
   }
 
-  let sendB64 = config.encoding === 'base64';
+  const sendB64 = config.encoding === 'base64';
   const response = {
     statusCode: 200,
     body: resultB64,
@@ -307,7 +307,7 @@ async function post(bodyStr: string, browser: Browser): Promise<APIGatewayProxyR
   try {
     if (bodyStr[0] !== '{') {
       // base64
-      let buf = Buffer.from(bodyStr, 'base64');
+      const buf = Buffer.from(bodyStr, 'base64');
       bodyStr = buf.toString();
     }
 
@@ -365,9 +365,12 @@ export const handler = async (event: APIGatewayEvent, context): Promise<APIGatew
   }
 
   context.callbackWaitsForEmptyEventLoop = false;
-  const browser = await getBrowser(browserMode);
+  const browser = await getBrowser(browserMode, [
+    'https://raw.githack.com/googlei18n/noto-emoji/master/fonts/NotoColorEmoji.ttf',
+    'https://raw.githack.com/googlefonts/noto-cjk/master/NotoSansCJK-Regular.ttc',
+  ]);
   try {
-    let response = await handleEvent(event, browser);
+    const response = await handleEvent(event, browser);
     return response;
   } catch (e) {
     closeBrowser();

@@ -1,14 +1,13 @@
 import { APIGatewayProxyResult, APIGatewayProxyEvent } from 'aws-lambda';
-import archiver from 'archiver';
 import { Duplex } from 'stream';
 import unzip from 'unzip-stream';
-import { handler, RenderConfig, Query } from './render';
+import { handler, RenderConfig } from './render';
 import { closeBrowser } from './chrome';
 
 declare global {
   // eslint-disable-next-line
   namespace jest {
-    interface Matchers<R> {
+    interface Matchers<R, T> {
       toStartWith: (prefix: string) => R;
     }
   }
@@ -38,7 +37,7 @@ function toStartWith(this: jest.MatcherUtils, received: string, prefix: string):
 expect.extend({ toStartWith });
 
 function generateEvent(httpMethod, queryParams, body: RenderConfig): APIGatewayProxyEvent {
-  let event: any = {
+  const event: any = {
     body: body ? JSON.stringify(body) : null,
     isBase64Encoded: false,
     httpMethod: httpMethod,
@@ -56,7 +55,7 @@ function generateEvent(httpMethod, queryParams, body: RenderConfig): APIGatewayP
 
 describe('handler with get', () => {
   it('warms up chrome', async () => {
-    let event = generateEvent('GET', { warm: '1' }, null);
+    const event = generateEvent('GET', { warm: '1' }, null);
 
     let response: APIGatewayProxyResult;
     let error;
@@ -75,7 +74,7 @@ describe('handler with get', () => {
   });
 
   it('render google with GET', async () => {
-    let event = generateEvent('GET', { url: 'https://www.google.com.au/', type: 'png' }, null);
+    const event = generateEvent('GET', { url: 'https://www.google.com.au/', type: 'png' }, null);
 
     let response: APIGatewayProxyResult;
     let error;
@@ -93,7 +92,7 @@ describe('handler with get', () => {
   });
 
   it('errors when no params with GET', async () => {
-    let event = generateEvent('GET', {}, null);
+    const event = generateEvent('GET', {}, null);
 
     let response: APIGatewayProxyResult;
     let error;
@@ -111,7 +110,7 @@ describe('handler with get', () => {
   });
 
   it('errors when missing type with GET', async () => {
-    let event = generateEvent('GET', {}, null);
+    const event = generateEvent('GET', {}, null);
 
     let response: APIGatewayProxyResult;
     let error;
@@ -132,7 +131,7 @@ describe('handler with get', () => {
 
 describe('handler with POST', () => {
   it('render google with POST', async () => {
-    let event = generateEvent(
+    const event = generateEvent(
       'POST',
       {},
       {
@@ -159,7 +158,7 @@ describe('handler with POST', () => {
   });
 
   it('outputs base64', async () => {
-    let event = generateEvent(
+    const event = generateEvent(
       'POST',
       {},
       {
@@ -187,7 +186,7 @@ describe('handler with POST', () => {
   });
 
   it('render google full page jpg with POST', async () => {
-    let event = generateEvent(
+    const event = generateEvent(
       'POST',
       {},
       {
@@ -215,7 +214,7 @@ describe('handler with POST', () => {
   });
 
   it('render google selector with POST', async () => {
-    let event = generateEvent(
+    const event = generateEvent(
       'POST',
       {},
       {
@@ -242,7 +241,7 @@ describe('handler with POST', () => {
   });
 
   it('render google pdf with POST', async () => {
-    let event = generateEvent(
+    const event = generateEvent(
       'POST',
       {},
       {
@@ -262,7 +261,7 @@ describe('handler with POST', () => {
     expect(response).not.toBeFalsy();
     expect(response.body).not.toBeFalsy();
 
-    let pdfString = Buffer.from(response.body, 'base64').toString();
+    const pdfString = Buffer.from(response.body, 'base64').toString();
 
     expect(pdfString).toStartWith('%PDF-');
     expect(error).toBeFalsy();
@@ -271,7 +270,7 @@ describe('handler with POST', () => {
   });
 
   it('render content pdf with POST', async () => {
-    let event = generateEvent(
+    const event = generateEvent(
       'POST',
       {},
       {
@@ -291,7 +290,7 @@ describe('handler with POST', () => {
     expect(response).not.toBeFalsy();
     expect(response.body).not.toBeFalsy();
 
-    let pdfString = Buffer.from(response.body, 'base64').toString();
+    const pdfString = Buffer.from(response.body, 'base64').toString();
 
     expect(pdfString).toStartWith('%PDF-');
     expect(error).toBeFalsy();
@@ -300,7 +299,7 @@ describe('handler with POST', () => {
   });
 
   it('render multiple files zipped', async () => {
-    let event = generateEvent(
+    const event = generateEvent(
       'POST',
       {},
       {
@@ -336,18 +335,18 @@ describe('handler with POST', () => {
     expect(response).not.toBeFalsy();
     expect(response.body).not.toBeFalsy();
 
-    let zipBuffer = Buffer.from(response.body, 'base64');
-    let stream = new Duplex();
+    const zipBuffer = Buffer.from(response.body, 'base64');
+    const stream = new Duplex();
     stream.push(zipBuffer);
     stream.push(null);
 
-    let fileNames = ['yahoo.png', 'amazon.jpg', 'google.pdf'];
+    const fileNames = ['yahoo.png', 'amazon.jpg', 'google.pdf'];
     let i = 0;
-    await new Promise((resolve, reject) => {
+    await new Promise(resolve => {
       stream
         .pipe(unzip.Parse())
         .on('entry', entry => {
-          var filePath = entry.path;
+          const filePath = entry.path;
 
           expect(filePath).toBe(fileNames[i]);
           i++;
@@ -363,7 +362,7 @@ describe('handler with POST', () => {
   });
 
   it('errors when no body with POST', async () => {
-    let event = generateEvent('POST', {}, null);
+    const event = generateEvent('POST', {}, null);
 
     let response: APIGatewayProxyResult;
     let error;
@@ -381,7 +380,7 @@ describe('handler with POST', () => {
   });
 
   it('errors when missing type with POST', async () => {
-    let event = generateEvent(
+    const event = generateEvent(
       'POST',
       {
         url: 'https://www.google.com.au/',

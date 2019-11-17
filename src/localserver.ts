@@ -7,17 +7,17 @@ const isDocker = process.env.IS_DOCKER;
 
 http
   .createServer((request, response) => {
-    let bodyChunks = [];
+    const bodyChunks = [];
 
     request
       .on('data', chunk => {
         bodyChunks.push(chunk);
       })
       .on('end', async () => {
-        let requestUrl = url.parse(request.url, true);
-        let body = Buffer.concat(bodyChunks).toString();
+        const requestUrl = url.parse(request.url, true);
+        const body = Buffer.concat(bodyChunks).toString();
 
-        let event: any = {
+        const event: any = {
           body,
           isBase64Encoded: false,
           httpMethod: request.method.toUpperCase(),
