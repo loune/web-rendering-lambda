@@ -27,7 +27,11 @@ The package can be deployed on AWS Lambda or Docker.
 
 ### AWS Lambda
 
-The AWS Lambda version of headless Chromium needs to be downloaded from https://github.com/adieuadieu/serverless-chrome/releases, extracted, then tar/gzipped and placed in the root of the project folder as `headless-chromium.tar.gz`.
+The AWS Lambda version uses the npm package `chrome-aws-lambda` with comes with a brotli compressed version of chrome that runs on AWS Lambda. Due to the 50 MB limitation of lambda packages, you can package with or without the Chromium binary. The binary compressed is around 43 MB (Chrome 79).
+
+#### Old instructions (if not using chrome-aws-lambda)
+
+The headless Chromium needs to be downloaded from https://github.com/adieuadieu/serverless-chrome/releases, extracted, then tar/gzipped and placed in the root of the project folder as `headless-chromium.tar.gz`.
 
 ```bash
 $ wget https://github.com/adieuadieu/serverless-chrome/releases/download/v1.0.0-55/stable-headless-chromium-amazonlinux-2017-03.zip
@@ -35,16 +39,14 @@ $ unzip stable-headless-chromium-amazonlinux-2017-03.zip
 $ tar -czf headless-chromium.tar.gz headless-chromium
 ```
 
-Due to the 50 MB limitation of lambda packages, you can package with or without the Chromium binary. The binary compressed is around 46 MB (Chrome 69).
-
 If Chromium is not found with the Lambda package, the script will try to retrieve it from a bucket. Inside `chrome.ts` please change the `chromeS3Bucket` variable to specify the S3 bucket to pull the chromium binary from. You will need to upload `headless-chromium.tar.gz` to the bucket and give the Lambda permission to access the file (see `iamRoleStatements` in `serverless.yml`).
 
-#### Manual
+#### Manual packaging
 
-To package and uploade manually, with Chrome embedded:
+To package and upload manually to AWS, with Chrome embedded:
 
 ```bash
-$ yarn package
+$ yarn package-with-chrome
 ```
 
 or without Chrome embedded
@@ -57,7 +59,7 @@ Once packaged, upload `package.zip` to your Lambda.
 
 #### With Serverless
 
-You can use `serverless` to package and deploy. Before deploying, please change `serverless.yml` with your settings including if you want to include or exclude Chromium by changing `package:initialize` to `yarn package` or `yarn package-without-chrome`.
+You can use `serverless` to package and deploy. Before deploying, please change `serverless.yml` with your settings including if you want to include or exclude Chromium by changing `package:initialize` to `yarn package-with-chrome` or `yarn package-without-chrome`.
 
 ```bash
 $ serverless deploy
@@ -183,6 +185,7 @@ $ yarn test
 
 This project was built with inspiration from:
 
+- https://github.com/alixaxel/chrome-aws-lambda
 - https://github.com/sambaiz/puppeteer-lambda-starter-kit
 - https://github.com/adieuadieu/serverless-chrome
 - https://github.com/prismagraphql/chromeless
