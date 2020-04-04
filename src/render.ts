@@ -125,7 +125,7 @@ async function renderPage(
   }
 
   if (config.media) {
-    await page.emulateMedia(config.media);
+    await page.emulateMediaType(config.media);
   }
 
   try {
