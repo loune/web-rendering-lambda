@@ -77,6 +77,7 @@ export async function archiveToS3(
 ): Promise<aws.S3.ManagedUpload.SendData> {
   const s3 = new aws.S3({ apiVersion: '2006-03-01', region: s3Region });
   return await new Promise<aws.S3.ManagedUpload.SendData>((resolve, reject) => {
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     const archive = getArchive(buffers, null, () => {}, reject);
     s3.upload({ Bucket: s3Bucket, Key: s3Key, Body: archive }, (error, data) => {
       if (error) {

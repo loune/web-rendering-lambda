@@ -1,14 +1,13 @@
 {
-    "compilerOptions": {
-        "target": "esnext",
-        "module": "esnext",
-        "moduleResolution": "node",
-        "esModuleInterop": true,
-        "noEmit": true,
-        "pretty": true,
-        "skipLibCheck": true
-    },
-    "include": [
-        "src"
-    ]
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "noEmit": true,
+    "pretty": true,
+    "skipLibCheck": true
+  },
+  "include": ["src"]
 }

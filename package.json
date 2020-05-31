@@ -14,8 +14,8 @@
     "package-without-chrome": "yarn package-prepare && cd dist && rm -f ../package.zip && ../node_modules/.bin/bestzip ../package.zip .",
     "package-prepare": "yarn compile-production && yarn package-fonts && cp -r package.json yarn.lock dist && cd dist && PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1 yarn install --production",
     "package-fonts": "if [ -e fonts ]; then cp -a fonts dist ; fi",
-    "compile-production": "rm -rf dist && mkdir dist && ./node_modules/.bin/babel src --extensions .ts,.js --out-dir dist",
-    "compile-debug": "rm -rf dist && mkdir dist && ./node_modules/.bin/babel src --extensions .ts,.js --out-dir dist --source-maps",
+    "compile-production": "yarn generate-types && rm -rf dist && mkdir dist && ./node_modules/.bin/babel src --extensions .ts,.js --out-dir dist && cp ./src/*.json ./dist/",
+    "compile-debug": "yarn generate-types && rm -rf dist && mkdir dist && ./node_modules/.bin/babel src --extensions .ts,.js --out-dir dist --source-maps && cp ./src/*.json ./dist/",
     "docker-build": "docker build -t web-rendering-lambda .",
     "docker-run": "docker run -p 8008:8008 -it web-rendering-lambda",
     "start": "yarn compile-debug && node dist/localserver.js",
@@ -26,11 +26,14 @@
     "watch-debug": "yarn nodemon -e ts -w ./src -x yarn debug-with-compile",
     "lint": "./node_modules/.bin/tsc --noEmit && eslint --ext .js,.ts src",
     "lint:fix": "eslint --ext .js,.ts src --fix",
-    "test": "yarn lint && yarn jest --coverage"
+    "test": "yarn lint && yarn generate-types && yarn jest --coverage",
+    "generate-types": "ts-json-schema-generator --tsconfig ./tsconfig.json --path './src/render.ts' --type 'RenderConfig' -o ./src/render_config_schema.json"
   },
   "dependencies": {
+    "ajv": "^6.12.2",
     "archiver": "^3.1.1",
     "base64-stream": "^1.0.0",
+    "better-ajv-errors": "^0.6.7",
     "chrome-aws-lambda": "^2.1.1",
     "puppeteer": "^2.1.1",
     "tar": "^5.0.5"
@@ -59,6 +62,7 @@
     "serverless-apigw-binary": "^0.4.4",
     "serverless-hooks-plugin": "^1.1.0",
     "ts-jest": "^25.4.0",
+    "ts-json-schema-generator": "^0.68.1",
     "typescript": "^3.8.3",
     "unzip-stream": "^0.3.0"
   }

@@ -1,5 +1,9 @@
 import { APIGatewayProxyResult, APIGatewayEvent } from 'aws-lambda';
 import { Browser, ScreenshotOptions, ElementHandle, PDFOptions, PDFFormat } from 'puppeteer';
+import Ajv from 'ajv';
+import betterAjvErrors from 'better-ajv-errors';
+import fs from 'fs';
+import path from 'path';
 import { getBrowser, closeBrowser, version, BrowserMode } from './chrome';
 import { archiveBase64, archiveToS3, saveToS3 } from './archive';
 
@@ -84,6 +88,19 @@ const defaultTimeout = 10000;
 const defaultViewportWidth = 1280;
 const defaultViewportHeight = 800;
 const defaultViewportdeviceScaleFactor = 1;
+
+let globalValidate = null;
+
+function getValidator(): { validate: Ajv.ValidateFunction; schema: string } {
+  if (globalValidate) {
+    return globalValidate;
+  }
+
+  const ajv = new Ajv({ jsonPointers: true });
+  const schema = JSON.parse(fs.readFileSync(path.join(__dirname, 'render_config_schema.json'), 'utf-8'));
+  globalValidate = { validate: ajv.compile(schema), schema };
+  return globalValidate;
+}
 
 async function renderPage(
   browser: Browser,
@@ -219,13 +236,13 @@ async function renderPage(
   return result;
 }
 
-function errorResponse(statusCode: number, message: string): APIGatewayProxyResult {
+function errorResponse(statusCode: number, message: string | object): APIGatewayProxyResult {
   console.error(`${statusCode}: ${message}`);
   return {
     statusCode: statusCode,
-    body: Buffer.from(message, 'utf8').toString('base64'),
+    body: Buffer.from(typeof message === 'string' ? message : JSON.stringify(message), 'utf8').toString('base64'),
     headers: {
-      'content-type': 'text/plain',
+      'content-type': typeof message === 'string' ? 'text/plain' : 'application/json',
     },
     isBase64Encoded: true,
   };
@@ -312,6 +329,12 @@ async function post(bodyStr: string, browser: Browser): Promise<APIGatewayProxyR
     }
 
     body = JSON.parse(bodyStr) as RenderConfig;
+    const { validate, schema } = getValidator();
+    const valid = validate(body);
+    if (!valid) {
+      console.error(validate.errors);
+      return errorResponse(400, { error: betterAjvErrors(schema, body, validate.errors, { format: 'js' }) });
+    }
   } catch (e) {
     return errorResponse(400, e.message);
   }
