@@ -1,9 +1,10 @@
 import { APIGatewayProxyResult, APIGatewayEvent } from 'aws-lambda';
-import { Browser, ScreenshotOptions, ElementHandle, PDFOptions, PDFFormat } from 'puppeteer';
+import { Browser, ScreenshotOptions, ElementHandle, PDFOptions, PDFFormat, Page } from 'puppeteer';
 import Ajv from 'ajv';
 import betterAjvErrors from 'better-ajv-errors';
 import fs from 'fs';
 import path from 'path';
+import { NodeVM } from 'vm2';
 import { getBrowser, closeBrowser, version, BrowserMode } from './chrome';
 import { archiveBase64, archiveToS3, saveToS3 } from './archive';
 
@@ -58,6 +59,7 @@ interface RenderPageConfig {
   pdf?: RenderPageConfigPdf;
   userAgent?: string;
   selector?: string;
+  script?: string;
 }
 
 interface RenderOnlyPageConfig extends RenderPageConfig {
@@ -75,7 +77,12 @@ interface RenderMultiplePageConfig {
   saveS3Region?: string;
 }
 
-export type RenderConfig = RenderOnlyPageConfig | RenderMultiplePageConfig;
+interface RenderScriptConfig {
+  type: 'script';
+  script: string;
+}
+
+export type RenderConfig = RenderOnlyPageConfig | RenderMultiplePageConfig | RenderScriptConfig;
 
 enum formatContentType {
   zip = 'application/zip',
@@ -100,6 +107,31 @@ function getValidator(): { validate: Ajv.ValidateFunction; schema: string } {
   const schema = JSON.parse(fs.readFileSync(path.join(__dirname, 'render_config_schema.json'), 'utf-8'));
   globalValidate = { validate: ajv.compile(schema), schema };
   return globalValidate;
+}
+
+async function renderScript(browser: Browser, page: Page, script: string): Promise<void> {
+  const vm = new NodeVM({
+    console: 'inherit',
+    sandbox: {
+      browser,
+      ...(page ? { page } : {}),
+    },
+    require: {
+      external: true,
+    },
+  });
+
+  try {
+    const scriptFunc = vm.run(
+      `async function f() { ${script} }` + `module.exports = function myscript(res, rej) { f().then(res).catch(rej) }`
+    );
+
+    await new Promise((resolve, rej) => {
+      scriptFunc(resolve, rej);
+    });
+  } catch (err) {
+    console.error('Failed to execute script.', err);
+  }
 }
 
 async function renderPage(
@@ -161,6 +193,10 @@ async function renderPage(
     if (e.name !== 'TimeoutError') {
       throw e;
     }
+  }
+
+  if (config.script) {
+    await renderScript(browser, page, config.script);
   }
 
   let element: ElementHandle<Element> = null;
@@ -252,6 +288,16 @@ export const render = async (browser: Browser, config: RenderConfig): Promise<AP
   let additionalHeaders = {};
   let resultB64;
 
+  const oKResponse = {
+    statusCode: 200,
+    body: Buffer.from('OK').toString('base64'),
+    headers: {
+      'content-type': 'text/plain',
+    },
+    isBase64Encoded: true,
+  };
+
+  // multi-page zip file
   if (config.type === 'zip') {
     if (!config.pages) {
       return errorResponse(400, `Missing pages property for zip`);
@@ -266,31 +312,26 @@ export const render = async (browser: Browser, config: RenderConfig): Promise<AP
 
     if (config.saveS3Bucket) {
       await archiveToS3(bufMap, config.saveFilename, config.saveS3Bucket, config.saveS3Region);
-      return {
-        statusCode: 200,
-        body: Buffer.from('OK').toString('base64'),
-        headers: {
-          'content-type': 'text/plain',
-        },
-        isBase64Encoded: true,
-      };
+      return oKResponse;
     }
 
     resultB64 = await archiveBase64(bufMap);
     //await archiveFile(bufMap, `${__dirname}/example.zip`);
+
+    // script file
+  } else if (config.type === 'script') {
+    console.log(`Rendering with script ${config.script}`);
+
+    await renderScript(browser, null, config.script);
+    return oKResponse;
+
+    // single image
   } else if (['jpeg', 'png', 'pdf'].includes(config.type)) {
     console.log(`Rendering ${config.url || 'content'} to ${config.type}`);
     if (config.saveS3Bucket) {
       const result = await renderPage(browser, config, 'binary');
       await saveToS3(result as Buffer, config.saveFilename, config.saveS3Bucket, config.saveS3Region);
-      return {
-        statusCode: 200,
-        body: Buffer.from('OK').toString('base64'),
-        headers: {
-          'content-type': 'text/plain',
-        },
-        isBase64Encoded: true,
-      };
+      return oKResponse;
     }
     resultB64 = await renderPage(browser, config, 'base64');
   } else {

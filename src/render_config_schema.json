@@ -121,6 +121,9 @@
             "saveS3Region": {
               "type": "string"
             },
+            "script": {
+              "type": "string"
+            },
             "selector": {
               "type": "string"
             },
@@ -264,6 +267,9 @@
                   "saveFilename": {
                     "type": "string"
                   },
+                  "script": {
+                    "type": "string"
+                  },
                   "selector": {
                     "type": "string"
                   },
@@ -329,6 +335,25 @@
           "required": [
             "type",
             "pages"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "script": {
+              "type": "string"
+            },
+            "type": {
+              "enum": [
+                "script"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "script"
           ],
           "type": "object"
         }

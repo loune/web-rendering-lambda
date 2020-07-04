@@ -1,6 +1,7 @@
 import { APIGatewayProxyResult, APIGatewayProxyEvent } from 'aws-lambda';
 import { Duplex } from 'stream';
 import unzip from 'unzip-stream';
+import { imageSize } from 'image-size';
 import { handler, RenderConfig } from './render';
 import { closeBrowser } from './chrome';
 
@@ -205,6 +206,38 @@ describe('handler with POST', () => {
     } catch (err) {
       error = err;
     }
+
+    expect(response).not.toBeFalsy();
+    expect(response.body).not.toBeFalsy();
+    expect(error).toBeFalsy();
+    expect(response.isBase64Encoded).toBe(true);
+    expect(response.statusCode).toBe(200);
+  });
+
+  it('render google image with script', async () => {
+    const event = generateEvent(
+      'POST',
+      {},
+      {
+        url: 'https://www.google.com.au/',
+        type: 'jpeg',
+        jpegQuality: 50,
+        viewport: { width: 1280, height: 600 },
+        script: 'page.setViewport({ width: 720, height: 1024 })',
+      }
+    );
+
+    let response: APIGatewayProxyResult;
+    let error;
+    try {
+      response = await handler(event, {});
+    } catch (err) {
+      error = err;
+    }
+
+    const dimension = imageSize(Buffer.from(response.body, 'base64'));
+    expect(dimension.height).toBe(1024);
+    expect(dimension.width).toBe(720);
 
     expect(response).not.toBeFalsy();
     expect(response.body).not.toBeFalsy();

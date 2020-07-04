@@ -114,6 +114,7 @@ An endpoint `/render` is available from the service. If running locally or on Do
 - `transparentBackground` `<boolean>` - Whether image should have transparent background (for PNGs) or the default white background.
 - `media` `<string>` - CSS media to use with render. Either `screen` or `print`. Images are defaulted to `screen` while PDFs are `print`.
 - `timeout` `<number>` - Number of milliseconds to wait for the page to finish loading. Maximum of 30000 (30 seconds) due to API gateway limits.
+- `script` `<string>` - Custom puppeteer JavaScript to run after the page loads. `browser` and `page` are available global objects.
 - `saveFilename` `<string>` - The file name to specify in the response headers.
 - `cookies` `<object>` - Cookies to include in the request.
 - `headers` `<object>` - Headers to include in the request.
