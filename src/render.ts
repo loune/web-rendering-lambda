@@ -199,7 +199,7 @@ async function renderPage(
     await renderScript(browser, page, config.script);
   }
 
-  let element: ElementHandle<Element> = null;
+  let element: ElementHandle<any> = null;
   if (config.selector) {
     element = await page.$(config.selector);
   }

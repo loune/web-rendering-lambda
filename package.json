@@ -6,7 +6,7 @@
   "author": "Loune Lam",
   "license": "MIT",
   "engines": {
-    "node": ">=10.15"
+    "node": ">=12.14"
   },
   "scripts": {
     "package": "yarn package-without-chrome",
@@ -45,8 +45,8 @@
     "@babel/preset-env": "^7.9.0",
     "@babel/preset-typescript": "^7.9.0",
     "@types/aws-lambda": "^8.10.47",
-    "@types/jest": "^25.2.1",
-    "@types/node": "^10.12.0",
+    "@types/jest": "^26.0.9",
+    "@types/node": "^12",
     "@types/puppeteer": "^2.0.1",
     "@typescript-eslint/eslint-plugin": "^2.26.0",
     "@typescript-eslint/parser": "^2.26.0",
@@ -58,14 +58,14 @@
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-prettier": "^3.1.1",
     "image-size": "^0.8.3",
-    "jest": "^25.5.1",
-    "nodemon": "^1.19.4",
-    "prettier": "^1.19.1",
+    "jest": "^26.3.0",
+    "nodemon": "^2.0.4",
+    "prettier": "^2.0.5",
     "serverless-apigw-binary": "^0.4.4",
     "serverless-hooks-plugin": "^1.1.0",
-    "ts-jest": "^25.4.0",
+    "ts-jest": "^26.1.4",
     "ts-json-schema-generator": "^0.68.1",
-    "typescript": "^3.8.3",
+    "typescript": "^3.9.7",
     "unzip-stream": "^0.3.0"
   }
 }
