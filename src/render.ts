@@ -1,4 +1,4 @@
-import { APIGatewayProxyResult, APIGatewayEvent } from 'aws-lambda';
+import type { APIGatewayProxyResult, APIGatewayEvent, Context } from 'aws-lambda';
 import { Browser, ScreenshotOptions, ElementHandle, PDFOptions, PDFFormat, Page } from 'puppeteer';
 import Ajv from 'ajv';
 import betterAjvErrors from 'better-ajv-errors';
@@ -272,7 +272,7 @@ async function renderPage(
   return result;
 }
 
-function errorResponse(statusCode: number, message: string | object): APIGatewayProxyResult {
+function errorResponse(statusCode: number, message: string | Record<string, unknown>): APIGatewayProxyResult {
   console.error(`${statusCode}: ${message}`);
   return {
     statusCode: statusCode,
@@ -422,7 +422,7 @@ async function handleEvent(event: any, browser: any): Promise<APIGatewayProxyRes
   return response;
 }
 
-export const handler = async (event: APIGatewayEvent, context): Promise<APIGatewayProxyResult> => {
+export const handler = async (event: APIGatewayEvent, context: Context): Promise<APIGatewayProxyResult> => {
   let browserMode: BrowserMode = 'local';
   if (event.requestContext.accountId !== undefined) {
     browserMode = event.requestContext.accountId === 'docker' ? 'docker' : 'lambda';

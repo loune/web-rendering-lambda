@@ -1,4 +1,4 @@
-import { APIGatewayProxyResult, APIGatewayProxyEvent } from 'aws-lambda';
+import type { APIGatewayProxyResult, APIGatewayProxyEvent, Context } from 'aws-lambda';
 import { Duplex } from 'stream';
 import unzip from 'unzip-stream';
 import { imageSize } from 'image-size';
@@ -15,6 +15,8 @@ declare global {
 }
 
 jest.setTimeout(30000);
+
+const dummyContext: Context = {} as Context;
 
 afterAll(() => {
   return closeBrowser();
@@ -61,7 +63,7 @@ describe('handler with get', () => {
     let response: APIGatewayProxyResult;
     let error;
     try {
-      response = await handler(event, {});
+      response = await handler(event, dummyContext);
     } catch (err) {
       error = err;
     }
@@ -80,7 +82,7 @@ describe('handler with get', () => {
     let response: APIGatewayProxyResult;
     let error;
     try {
-      response = await handler(event, {});
+      response = await handler(event, dummyContext);
     } catch (err) {
       error = err;
     }
@@ -98,7 +100,7 @@ describe('handler with get', () => {
     let response: APIGatewayProxyResult;
     let error;
     try {
-      response = await handler(event, {});
+      response = await handler(event, dummyContext);
     } catch (err) {
       error = err;
     }
@@ -117,7 +119,7 @@ describe('handler with get', () => {
     let error;
 
     try {
-      response = await handler(event, { url: 'https://www.google.com.au/' });
+      response = await handler(event, dummyContext);
     } catch (err) {
       error = err;
     }
@@ -146,7 +148,7 @@ describe('handler with POST', () => {
     let response: APIGatewayProxyResult;
     let error;
     try {
-      response = await handler(event, {});
+      response = await handler(event, dummyContext);
     } catch (err) {
       error = err;
     }
@@ -174,7 +176,7 @@ describe('handler with POST', () => {
     let response: APIGatewayProxyResult;
     let error;
     try {
-      response = await handler(event, {});
+      response = await handler(event, dummyContext);
     } catch (err) {
       error = err;
     }
@@ -202,7 +204,7 @@ describe('handler with POST', () => {
     let response: APIGatewayProxyResult;
     let error;
     try {
-      response = await handler(event, {});
+      response = await handler(event, dummyContext);
     } catch (err) {
       error = err;
     }
@@ -230,7 +232,7 @@ describe('handler with POST', () => {
     let response: APIGatewayProxyResult;
     let error;
     try {
-      response = await handler(event, {});
+      response = await handler(event, dummyContext);
     } catch (err) {
       error = err;
     }
@@ -261,7 +263,7 @@ describe('handler with POST', () => {
     let response: APIGatewayProxyResult;
     let error;
     try {
-      response = await handler(event, {});
+      response = await handler(event, dummyContext);
     } catch (err) {
       error = err;
     }
@@ -286,7 +288,7 @@ describe('handler with POST', () => {
     let response: APIGatewayProxyResult;
     let error;
     try {
-      response = await handler(event, {});
+      response = await handler(event, dummyContext);
     } catch (err) {
       error = err;
     }
@@ -315,7 +317,7 @@ describe('handler with POST', () => {
     let response: APIGatewayProxyResult;
     let error;
     try {
-      response = await handler(event, {});
+      response = await handler(event, dummyContext);
     } catch (err) {
       error = err;
     }
@@ -360,7 +362,7 @@ describe('handler with POST', () => {
     let response: APIGatewayProxyResult;
     let error;
     try {
-      response = await handler(event, {});
+      response = await handler(event, dummyContext);
     } catch (err) {
       error = err;
     }
@@ -400,7 +402,7 @@ describe('handler with POST', () => {
     let response: APIGatewayProxyResult;
     let error;
     try {
-      response = await handler(event, {});
+      response = await handler(event, dummyContext);
     } catch (err) {
       error = err;
     }
@@ -424,7 +426,7 @@ describe('handler with POST', () => {
     let response: APIGatewayProxyResult;
     let error;
     try {
-      response = await handler(event, {});
+      response = await handler(event, dummyContext);
     } catch (err) {
       error = err;
     }

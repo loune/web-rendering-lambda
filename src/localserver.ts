@@ -1,6 +1,7 @@
 import { handler } from './render';
 import * as http from 'http';
 import * as url from 'url';
+import type { Context } from 'aws-lambda';
 
 const port = process.env.PORT || 8008;
 const isDocker = process.env.IS_DOCKER;
@@ -32,7 +33,7 @@ http
         };
 
         try {
-          const renderResult = await handler(event, {});
+          const renderResult = await handler(event, {} as Context);
           response.writeHead(renderResult.statusCode, renderResult.headers as any);
           const buf = renderResult.isBase64Encoded
             ? Buffer.from(renderResult.body, 'base64')

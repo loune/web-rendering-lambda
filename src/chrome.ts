@@ -51,7 +51,7 @@ async function browserOk(browser: puppeteer.Browser): Promise<boolean> {
   return false;
 }
 
-export async function findChrome(isLambda): Promise<string> {
+export async function findChrome(isLambda: boolean): Promise<string> {
   if (!isLambda) {
     return undefined;
   }
