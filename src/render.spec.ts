@@ -39,7 +39,11 @@ function toStartWith(this: jest.MatcherUtils, received: string, prefix: string):
 
 expect.extend({ toStartWith });
 
-function generateEvent(httpMethod, queryParams, body: RenderConfig): APIGatewayProxyEvent {
+function generateEvent(
+  httpMethod: string,
+  queryParams: { [key: string]: string },
+  body: RenderConfig | null
+): APIGatewayProxyEvent {
   const event: any = {
     body: body ? JSON.stringify(body) : null,
     isBase64Encoded: false,
@@ -60,7 +64,7 @@ describe('handler with get', () => {
   it('warms up chrome', async () => {
     const event = generateEvent('GET', { warm: '1' }, null);
 
-    let response: APIGatewayProxyResult;
+    let response: APIGatewayProxyResult | undefined;
     let error;
     try {
       response = await handler(event, dummyContext);
@@ -69,17 +73,17 @@ describe('handler with get', () => {
     }
 
     expect(response).not.toBeFalsy();
-    expect(response.body).not.toBeFalsy();
+    expect(response?.body).not.toBeFalsy();
     expect(error).toBeFalsy();
-    expect(response.isBase64Encoded).toBe(true);
-    expect(response.statusCode).toBe(200);
-    expect(Buffer.from(response.body, 'base64').toString()).toStartWith('Warmed up chrome');
+    expect(response?.isBase64Encoded).toBe(true);
+    expect(response?.statusCode).toBe(200);
+    expect(Buffer.from(response?.body || '', 'base64').toString()).toStartWith('Warmed up chrome');
   });
 
   it('render google with GET', async () => {
     const event = generateEvent('GET', { url: 'https://www.google.com.au/', type: 'png' }, null);
 
-    let response: APIGatewayProxyResult;
+    let response: APIGatewayProxyResult | undefined;
     let error;
     try {
       response = await handler(event, dummyContext);
@@ -88,16 +92,16 @@ describe('handler with get', () => {
     }
 
     expect(response).not.toBeFalsy();
-    expect(response.body).not.toBeFalsy();
+    expect(response?.body).not.toBeFalsy();
     expect(error).toBeFalsy();
-    expect(response.isBase64Encoded).toBe(true);
-    expect(response.statusCode).toBe(200);
+    expect(response?.isBase64Encoded).toBe(true);
+    expect(response?.statusCode).toBe(200);
   });
 
   it('errors when no params with GET', async () => {
     const event = generateEvent('GET', {}, null);
 
-    let response: APIGatewayProxyResult;
+    let response: APIGatewayProxyResult | undefined;
     let error;
     try {
       response = await handler(event, dummyContext);
@@ -106,16 +110,16 @@ describe('handler with get', () => {
     }
 
     expect(response).not.toBeFalsy();
-    expect(response.body).not.toBeFalsy();
+    expect(response?.body).not.toBeFalsy();
     expect(error).toBeFalsy();
-    expect(response.isBase64Encoded).toBe(true);
-    expect(response.statusCode).toBe(400);
+    expect(response?.isBase64Encoded).toBe(true);
+    expect(response?.statusCode).toBe(400);
   });
 
   it('errors when missing type with GET', async () => {
     const event = generateEvent('GET', {}, null);
 
-    let response: APIGatewayProxyResult;
+    let response: APIGatewayProxyResult | undefined;
     let error;
 
     try {
@@ -125,10 +129,10 @@ describe('handler with get', () => {
     }
 
     expect(response).not.toBeFalsy();
-    expect(response.body).not.toBeFalsy();
+    expect(response?.body).not.toBeFalsy();
     expect(error).toBeFalsy();
-    expect(response.isBase64Encoded).toBe(true);
-    expect(response.statusCode).toBe(400);
+    expect(response?.isBase64Encoded).toBe(true);
+    expect(response?.statusCode).toBe(400);
   });
 });
 
@@ -145,7 +149,7 @@ describe('handler with POST', () => {
       }
     );
 
-    let response: APIGatewayProxyResult;
+    let response: APIGatewayProxyResult | undefined;
     let error;
     try {
       response = await handler(event, dummyContext);
@@ -154,10 +158,10 @@ describe('handler with POST', () => {
     }
 
     expect(response).not.toBeFalsy();
-    expect(response.body).not.toBeFalsy();
+    expect(response?.body).not.toBeFalsy();
     expect(error).toBeFalsy();
-    expect(response.isBase64Encoded).toBe(true);
-    expect(response.statusCode).toBe(200);
+    expect(response?.isBase64Encoded).toBe(true);
+    expect(response?.statusCode).toBe(200);
   });
 
   it('outputs base64', async () => {
@@ -173,7 +177,7 @@ describe('handler with POST', () => {
       }
     );
 
-    let response: APIGatewayProxyResult;
+    let response: APIGatewayProxyResult | undefined;
     let error;
     try {
       response = await handler(event, dummyContext);
@@ -182,10 +186,10 @@ describe('handler with POST', () => {
     }
 
     expect(response).not.toBeFalsy();
-    expect(response.body).not.toBeFalsy();
+    expect(response?.body).not.toBeFalsy();
     expect(error).toBeFalsy();
-    expect(response.isBase64Encoded).toBe(false);
-    expect(response.statusCode).toBe(200);
+    expect(response?.isBase64Encoded).toBe(false);
+    expect(response?.statusCode).toBe(200);
   });
 
   it('render google full page jpg with POST', async () => {
@@ -201,7 +205,7 @@ describe('handler with POST', () => {
       }
     );
 
-    let response: APIGatewayProxyResult;
+    let response: APIGatewayProxyResult | undefined;
     let error;
     try {
       response = await handler(event, dummyContext);
@@ -210,10 +214,10 @@ describe('handler with POST', () => {
     }
 
     expect(response).not.toBeFalsy();
-    expect(response.body).not.toBeFalsy();
+    expect(response?.body).not.toBeFalsy();
     expect(error).toBeFalsy();
-    expect(response.isBase64Encoded).toBe(true);
-    expect(response.statusCode).toBe(200);
+    expect(response?.isBase64Encoded).toBe(true);
+    expect(response?.statusCode).toBe(200);
   });
 
   it('render google image with script', async () => {
@@ -229,7 +233,7 @@ describe('handler with POST', () => {
       }
     );
 
-    let response: APIGatewayProxyResult;
+    let response: APIGatewayProxyResult | undefined;
     let error;
     try {
       response = await handler(event, dummyContext);
@@ -237,15 +241,15 @@ describe('handler with POST', () => {
       error = err;
     }
 
-    const dimension = imageSize(Buffer.from(response.body, 'base64'));
+    const dimension = imageSize(Buffer.from(response?.body || '', 'base64'));
     expect(dimension.height).toBe(1024);
     expect(dimension.width).toBe(720);
 
     expect(response).not.toBeFalsy();
-    expect(response.body).not.toBeFalsy();
+    expect(response?.body).not.toBeFalsy();
     expect(error).toBeFalsy();
-    expect(response.isBase64Encoded).toBe(true);
-    expect(response.statusCode).toBe(200);
+    expect(response?.isBase64Encoded).toBe(true);
+    expect(response?.statusCode).toBe(200);
   });
 
   it('render google selector with POST', async () => {
@@ -260,7 +264,7 @@ describe('handler with POST', () => {
       }
     );
 
-    let response: APIGatewayProxyResult;
+    let response: APIGatewayProxyResult | undefined;
     let error;
     try {
       response = await handler(event, dummyContext);
@@ -269,10 +273,10 @@ describe('handler with POST', () => {
     }
 
     expect(response).not.toBeFalsy();
-    expect(response.body).not.toBeFalsy();
+    expect(response?.body).not.toBeFalsy();
     expect(error).toBeFalsy();
-    expect(response.isBase64Encoded).toBe(true);
-    expect(response.statusCode).toBe(200);
+    expect(response?.isBase64Encoded).toBe(true);
+    expect(response?.statusCode).toBe(200);
   });
 
   it('render google pdf with POST', async () => {
@@ -285,7 +289,7 @@ describe('handler with POST', () => {
       }
     );
 
-    let response: APIGatewayProxyResult;
+    let response: APIGatewayProxyResult | undefined;
     let error;
     try {
       response = await handler(event, dummyContext);
@@ -294,14 +298,14 @@ describe('handler with POST', () => {
     }
 
     expect(response).not.toBeFalsy();
-    expect(response.body).not.toBeFalsy();
+    expect(response?.body).not.toBeFalsy();
 
-    const pdfString = Buffer.from(response.body, 'base64').toString();
+    const pdfString = Buffer.from(response?.body || '', 'base64').toString();
 
     expect(pdfString).toStartWith('%PDF-');
     expect(error).toBeFalsy();
-    expect(response.isBase64Encoded).toBe(true);
-    expect(response.statusCode).toBe(200);
+    expect(response?.isBase64Encoded).toBe(true);
+    expect(response?.statusCode).toBe(200);
   });
 
   it('render content pdf with POST', async () => {
@@ -314,7 +318,7 @@ describe('handler with POST', () => {
       }
     );
 
-    let response: APIGatewayProxyResult;
+    let response: APIGatewayProxyResult | undefined;
     let error;
     try {
       response = await handler(event, dummyContext);
@@ -323,14 +327,14 @@ describe('handler with POST', () => {
     }
 
     expect(response).not.toBeFalsy();
-    expect(response.body).not.toBeFalsy();
+    expect(response?.body).not.toBeFalsy();
 
-    const pdfString = Buffer.from(response.body, 'base64').toString();
+    const pdfString = Buffer.from(response?.body || '', 'base64').toString();
 
     expect(pdfString).toStartWith('%PDF-');
     expect(error).toBeFalsy();
-    expect(response.isBase64Encoded).toBe(true);
-    expect(response.statusCode).toBe(200);
+    expect(response?.isBase64Encoded).toBe(true);
+    expect(response?.statusCode).toBe(200);
   });
 
   it('render multiple files zipped', async () => {
@@ -359,7 +363,7 @@ describe('handler with POST', () => {
       }
     );
 
-    let response: APIGatewayProxyResult;
+    let response: APIGatewayProxyResult | undefined;
     let error;
     try {
       response = await handler(event, dummyContext);
@@ -368,9 +372,9 @@ describe('handler with POST', () => {
     }
 
     expect(response).not.toBeFalsy();
-    expect(response.body).not.toBeFalsy();
+    expect(response?.body).not.toBeFalsy();
 
-    const zipBuffer = Buffer.from(response.body, 'base64');
+    const zipBuffer = Buffer.from(response?.body || '', 'base64');
     const stream = new Duplex();
     stream.push(zipBuffer);
     stream.push(null);
@@ -380,7 +384,7 @@ describe('handler with POST', () => {
     await new Promise(resolve => {
       stream
         .pipe(unzip.Parse())
-        .on('entry', entry => {
+        .on('entry', (entry: any) => {
           const filePath = entry.path;
 
           expect(filePath).toBe(fileNames[i]);
@@ -392,14 +396,14 @@ describe('handler with POST', () => {
     });
 
     expect(error).toBeFalsy();
-    expect(response.isBase64Encoded).toBe(true);
-    expect(response.statusCode).toBe(200);
+    expect(response?.isBase64Encoded).toBe(true);
+    expect(response?.statusCode).toBe(200);
   });
 
   it('errors when no body with POST', async () => {
     const event = generateEvent('POST', {}, null);
 
-    let response: APIGatewayProxyResult;
+    let response: APIGatewayProxyResult | undefined;
     let error;
     try {
       response = await handler(event, dummyContext);
@@ -408,10 +412,10 @@ describe('handler with POST', () => {
     }
 
     expect(response).not.toBeFalsy();
-    expect(response.body).not.toBeFalsy();
+    expect(response?.body).not.toBeFalsy();
     expect(error).toBeFalsy();
-    expect(response.isBase64Encoded).toBe(true);
-    expect(response.statusCode).toBe(400);
+    expect(response?.isBase64Encoded).toBe(true);
+    expect(response?.statusCode).toBe(400);
   });
 
   it('errors when missing type with POST', async () => {
@@ -423,7 +427,7 @@ describe('handler with POST', () => {
       null
     );
 
-    let response: APIGatewayProxyResult;
+    let response: APIGatewayProxyResult | undefined;
     let error;
     try {
       response = await handler(event, dummyContext);
@@ -432,9 +436,9 @@ describe('handler with POST', () => {
     }
 
     expect(response).not.toBeFalsy();
-    expect(response.body).not.toBeFalsy();
+    expect(response?.body).not.toBeFalsy();
     expect(error).toBeFalsy();
-    expect(response.isBase64Encoded).toBe(true);
-    expect(response.statusCode).toBe(400);
+    expect(response?.isBase64Encoded).toBe(true);
+    expect(response?.statusCode).toBe(400);
   });
 });

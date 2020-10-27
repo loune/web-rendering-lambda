@@ -20,8 +20,8 @@ const launchOptionForLambda = [
   '--single-process',
 ];
 
-let browser = null;
-export let version = null;
+let browser: puppeteer.Browser | null = null;
+export let version: string | null = null;
 
 export async function closeBrowser(): Promise<void> {
   try {
@@ -36,7 +36,7 @@ export async function closeBrowser(): Promise<void> {
   browser = null;
 }
 
-async function browserOk(browser: puppeteer.Browser): Promise<boolean> {
+async function browserOk(browser: puppeteer.Browser | null): Promise<boolean> {
   if (!browser) {
     return false;
   }
@@ -51,7 +51,7 @@ async function browserOk(browser: puppeteer.Browser): Promise<boolean> {
   return false;
 }
 
-export async function findChrome(isLambda: boolean): Promise<string> {
+export async function findChrome(isLambda: boolean): Promise<string | undefined> {
   if (!isLambda) {
     return undefined;
   }
@@ -130,8 +130,11 @@ function copyPackagedFonts(): void {
   fontFiles.forEach(f => fs.copyFileSync(path.join(srcFontDir, f), path.join(destFontDir, f.replace(' ', '+'))));
 }
 
-export async function getBrowser(mode: BrowserMode, externalFontUrls: string[] = null): Promise<puppeteer.Browser> {
-  if (await browserOk(browser)) {
+export async function getBrowser(
+  mode: BrowserMode,
+  externalFontUrls: string[] | null = null
+): Promise<puppeteer.Browser> {
+  if (browser && (await browserOk(browser))) {
     return browser;
   }
 

@@ -1,10 +1,15 @@
 import * as fs from 'fs';
-import * as Stream from 'stream';
+import * as stream from 'stream';
 import archiver from 'archiver';
 import { Base64Encode } from 'base64-stream';
 import * as aws from 'aws-sdk';
 
-function getArchive(buffers: Map<string, Buffer>, pipeOutput: Stream, resolve: () => void, reject: (err) => void): any {
+function getArchive(
+  buffers: Map<string, Buffer>,
+  pipeOutput: stream.Writable | undefined,
+  resolve: () => void,
+  reject: (err: any) => void
+): any {
   const archive = archiver('zip', {
     zlib: { level: 9 },
   });
@@ -31,7 +36,7 @@ function getArchive(buffers: Map<string, Buffer>, pipeOutput: Stream, resolve: (
   return archive;
 }
 
-export async function archive(buffers: Map<string, Buffer>, output: Stream): Promise<void> {
+export async function archive(buffers: Map<string, Buffer>, output: stream.Writable): Promise<void> {
   await new Promise((resolve, reject) => {
     getArchive(buffers, output, resolve, reject);
   });
@@ -51,8 +56,8 @@ export async function archiveFile(buffers: Map<string, Buffer>, filename: string
 
 export async function archiveBase64(buffers: Map<string, Buffer>): Promise<string> {
   return new Promise<string>((resolve, reject) => {
-    const strings = [];
-    const output = new Stream.PassThrough();
+    const strings: string[] = [];
+    const output = new stream.PassThrough();
     const outputToB64 = new Base64Encode();
 
     output.on('data', data => {
@@ -73,19 +78,23 @@ export async function archiveToS3(
   buffers: Map<string, Buffer>,
   s3Key: string,
   s3Bucket: string,
-  s3Region: string
+  s3Region: string,
+  contentType: string
 ): Promise<aws.S3.ManagedUpload.SendData> {
   const s3 = new aws.S3({ apiVersion: '2006-03-01', region: s3Region });
   return await new Promise<aws.S3.ManagedUpload.SendData>((resolve, reject) => {
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    const archive = getArchive(buffers, null, () => {}, reject);
-    s3.upload({ Bucket: s3Bucket, Key: s3Key, Body: archive }, (error, data) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(data);
+    const archive = getArchive(buffers, undefined, () => {}, reject);
+    s3.upload(
+      { Bucket: s3Bucket, Key: s3Key, Body: archive, ContentType: contentType },
+      (error: any, data: aws.S3.ManagedUpload.SendData) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(data);
+        }
       }
-    });
+    );
   });
 }
 
@@ -93,14 +102,15 @@ export async function saveToS3(
   buffer: Buffer,
   s3Key: string,
   s3Bucket: string,
-  s3Region: string
+  s3Region: string,
+  contentType: string
 ): Promise<aws.S3.ManagedUpload.SendData> {
   const s3 = new aws.S3({ apiVersion: '2006-03-01', region: s3Region });
   return await new Promise<aws.S3.ManagedUpload.SendData>((resolve, reject) => {
-    const stream = new Stream.Duplex();
-    stream.push(buffer);
-    stream.push(null);
-    s3.upload({ Bucket: s3Bucket, Key: s3Key, Body: stream }, (error, data) => {
+    const duplexStream = new stream.Duplex();
+    duplexStream.push(buffer);
+    duplexStream.push(null);
+    s3.upload({ Bucket: s3Bucket, Key: s3Key, Body: stream, ContentType: contentType }, (error, data) => {
       if (error) {
         reject(error);
       } else {

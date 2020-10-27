@@ -96,7 +96,7 @@ const defaultViewportWidth = 1280;
 const defaultViewportHeight = 800;
 const defaultViewportdeviceScaleFactor = 1;
 
-let globalValidate = null;
+let globalValidate: { validate: Ajv.ValidateFunction; schema: string } | undefined;
 
 function getValidator(): { validate: Ajv.ValidateFunction; schema: string } {
   if (globalValidate) {
@@ -109,7 +109,7 @@ function getValidator(): { validate: Ajv.ValidateFunction; schema: string } {
   return globalValidate;
 }
 
-async function renderScript(browser: Browser, page: Page, script: string): Promise<void> {
+async function renderScript(browser: Browser, page: Page | undefined, script: string): Promise<void> {
   const vm = new NodeVM({
     console: 'inherit',
     sandbox: {
@@ -161,7 +161,9 @@ async function renderPage(
   await page.setCacheEnabled(false);
   if (config.cookies) {
     await Promise.all(
-      Object.keys(config.cookies).map(name => page.setCookie({ name, value: config.cookies[name], url: config.url }))
+      Object.keys(config.cookies).map(name =>
+        page.setCookie({ name, value: config.cookies?.[name] || '', url: config.url })
+      )
     );
   }
 
@@ -184,7 +186,7 @@ async function renderPage(
         waitUntil: ['domcontentloaded', 'networkidle0'],
       });
     } else {
-      await page.setContent(config.content, {
+      await page.setContent(config.content || '', {
         timeout: config.timeout || defaultTimeout,
         waitUntil: ['domcontentloaded', 'networkidle0'],
       });
@@ -199,7 +201,7 @@ async function renderPage(
     await renderScript(browser, page, config.script);
   }
 
-  let element: ElementHandle<any> = null;
+  let element: ElementHandle<any> | null = null;
   if (config.selector) {
     element = await page.$(config.selector);
   }
@@ -286,7 +288,7 @@ function errorResponse(statusCode: number, message: string | Record<string, unkn
 
 export const render = async (browser: Browser, config: RenderConfig): Promise<APIGatewayProxyResult> => {
   let additionalHeaders = {};
-  let resultB64;
+  let resultB64: string;
 
   const oKResponse = {
     statusCode: 200,
@@ -311,7 +313,17 @@ export const render = async (browser: Browser, config: RenderConfig): Promise<AP
     );
 
     if (config.saveS3Bucket) {
-      await archiveToS3(bufMap, config.saveFilename, config.saveS3Bucket, config.saveS3Region);
+      if (!config.saveFilename || !config.saveS3Region) {
+        return errorResponse(400, `Missing saveFilename or saveS3Region property for saving to S3`);
+      }
+
+      await archiveToS3(
+        bufMap,
+        config.saveFilename,
+        config.saveS3Bucket,
+        config.saveS3Region,
+        formatContentType[config.type]
+      );
       return oKResponse;
     }
 
@@ -322,18 +334,28 @@ export const render = async (browser: Browser, config: RenderConfig): Promise<AP
   } else if (config.type === 'script') {
     console.log(`Rendering with script ${config.script}`);
 
-    await renderScript(browser, null, config.script);
+    await renderScript(browser, undefined, config.script);
     return oKResponse;
 
     // single image
   } else if (['jpeg', 'png', 'pdf'].includes(config.type)) {
     console.log(`Rendering ${config.url || 'content'} to ${config.type}`);
     if (config.saveS3Bucket) {
+      if (!config.saveFilename || !config.saveS3Region) {
+        return errorResponse(400, `Missing saveFilename or saveS3Region property for saving to S3`);
+      }
+
       const result = await renderPage(browser, config, 'binary');
-      await saveToS3(result as Buffer, config.saveFilename, config.saveS3Bucket, config.saveS3Region);
+      await saveToS3(
+        result as Buffer,
+        config.saveFilename,
+        config.saveS3Bucket,
+        config.saveS3Region,
+        formatContentType[config.type]
+      );
       return oKResponse;
     }
-    resultB64 = await renderPage(browser, config, 'base64');
+    resultB64 = (await renderPage(browser, config, 'base64')) as string;
   } else {
     return errorResponse(400, `Invalid type specified (${config.type})`);
   }
@@ -383,7 +405,7 @@ async function post(bodyStr: string, browser: Browser): Promise<APIGatewayProxyR
   return await render(browser, body);
 }
 
-async function get(query: Query, browser): Promise<APIGatewayProxyResult> {
+async function get(query: Query, browser: Browser): Promise<APIGatewayProxyResult> {
   if (!query) {
     return errorResponse(400, `arguments missing (chrome ${version})`);
   }

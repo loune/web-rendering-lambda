@@ -8,13 +8,17 @@ const isDocker = process.env.IS_DOCKER;
 
 http
   .createServer((request, response) => {
-    const bodyChunks = [];
+    const bodyChunks: any[] = [];
 
     request
       .on('data', chunk => {
         bodyChunks.push(chunk);
       })
       .on('end', async () => {
+        if (!request.url || !request.method) {
+          throw new Error('Url or method not defined');
+        }
+
         const requestUrl = url.parse(request.url, true);
         const body = Buffer.concat(bodyChunks).toString();
 
