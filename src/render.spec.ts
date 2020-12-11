@@ -381,7 +381,7 @@ describe('handler with POST', () => {
 
     const fileNames = ['yahoo.png', 'amazon.jpg', 'google.pdf'];
     let i = 0;
-    await new Promise(resolve => {
+    await new Promise<void>(resolve => {
       stream
         .pipe(unzip.Parse())
         .on('entry', (entry: any) => {

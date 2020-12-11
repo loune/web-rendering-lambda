@@ -290,14 +290,15 @@ export const render = async (browser: Browser, config: RenderConfig): Promise<AP
   let additionalHeaders = {};
   let resultB64: string;
 
-  const oKResponse = {
+  const oKResponse: (location?: string) => APIGatewayProxyResult = location => ({
     statusCode: 200,
     body: Buffer.from('OK').toString('base64'),
     headers: {
       'content-type': 'text/plain',
+      ...(location ? { location } : {}),
     },
     isBase64Encoded: true,
-  };
+  });
 
   // multi-page zip file
   if (config.type === 'zip') {
@@ -317,14 +318,15 @@ export const render = async (browser: Browser, config: RenderConfig): Promise<AP
         return errorResponse(400, `Missing saveFilename or saveS3Region property for saving to S3`);
       }
 
-      await archiveToS3(
+      const s3response = await archiveToS3(
         bufMap,
         config.saveFilename,
         config.saveS3Bucket,
         config.saveS3Region,
         formatContentType[config.type]
       );
-      return oKResponse;
+
+      return oKResponse(s3response.Location);
     }
 
     resultB64 = await archiveBase64(bufMap);
@@ -335,7 +337,7 @@ export const render = async (browser: Browser, config: RenderConfig): Promise<AP
     console.log(`Rendering with script ${config.script}`);
 
     await renderScript(browser, undefined, config.script);
-    return oKResponse;
+    return oKResponse();
 
     // single image
   } else if (['jpeg', 'png', 'pdf'].includes(config.type)) {
@@ -346,14 +348,14 @@ export const render = async (browser: Browser, config: RenderConfig): Promise<AP
       }
 
       const result = await renderPage(browser, config, 'binary');
-      await saveToS3(
+      const s3response = await saveToS3(
         result as Buffer,
         config.saveFilename,
         config.saveS3Bucket,
         config.saveS3Region,
         formatContentType[config.type]
       );
-      return oKResponse;
+      return oKResponse(s3response.Location);
     }
     resultB64 = (await renderPage(browser, config, 'base64')) as string;
   } else {
@@ -365,7 +367,7 @@ export const render = async (browser: Browser, config: RenderConfig): Promise<AP
   }
 
   const sendB64 = config.encoding === 'base64';
-  const response = {
+  const response: APIGatewayProxyResult = {
     statusCode: 200,
     body: resultB64,
     headers: {

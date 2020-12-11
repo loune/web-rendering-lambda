@@ -7,8 +7,8 @@ import * as aws from 'aws-sdk';
 function getArchive(
   buffers: Map<string, Buffer>,
   pipeOutput: stream.Writable | undefined,
-  resolve: () => void,
-  reject: (err: any) => void
+  resolve: (value?: void) => void,
+  reject: (err?: any) => void
 ): any {
   const archive = archiver('zip', {
     zlib: { level: 9 },
@@ -37,7 +37,7 @@ function getArchive(
 }
 
 export async function archive(buffers: Map<string, Buffer>, output: stream.Writable): Promise<void> {
-  await new Promise((resolve, reject) => {
+  await new Promise<void>((resolve, reject) => {
     getArchive(buffers, output, resolve, reject);
   });
 }

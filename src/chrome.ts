@@ -71,7 +71,7 @@ export async function findChrome(isLambda: boolean): Promise<string | undefined>
   }
 
   if (fs.existsSync(chromePathTgz)) {
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       fs.createReadStream(chromePathTgz)
         .on('error', err => reject(err))
         .pipe(
@@ -89,7 +89,7 @@ export async function findChrome(isLambda: boolean): Promise<string | undefined>
   if (chromeS3Bucket) {
     const s3 = new aws.S3({ apiVersion: '2006-03-01' });
     // s3
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       const params = {
         Bucket: chromeS3Bucket,
         Key: chromeTgzFilename,
