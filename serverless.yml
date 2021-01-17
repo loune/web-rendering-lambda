@@ -19,6 +19,8 @@ provider:
       Action:
         - 'lambda:InvokeFunction'
       Resource: 'arn:aws:lambda:::function:*'
+  environment:
+    FONTCONFIG_PATH: ./fonts
 
 functions:
   render:

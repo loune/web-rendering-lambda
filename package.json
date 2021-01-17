@@ -64,7 +64,7 @@
     "jest": "^26.6.1",
     "nodemon": "^2.0.6",
     "prettier": "^2.0.5",
-    "serverless": "^2.15.0",
+    "serverless": "^2.19.0",
     "serverless-apigw-binary": "^0.4.4",
     "serverless-hooks-plugin": "^1.1.0",
     "ts-jest": "^26.4.3",
