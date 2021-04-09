@@ -8,7 +8,7 @@ import { closeBrowser } from './chrome';
 declare global {
   // eslint-disable-next-line
   namespace jest {
-    interface Matchers<R, T> {
+    interface Matchers<R> {
       toStartWith: (prefix: string) => R;
     }
   }

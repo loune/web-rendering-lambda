@@ -145,18 +145,18 @@ export async function getBrowser(
       await Promise.all(externalFontUrls.map(url => chromiumLambda.font(url)));
     }
 
-    browser = await chromiumLambda.puppeteer.launch({
+    browser = (await chromiumLambda.puppeteer.launch({
       args: chromiumLambda.args,
       defaultViewport: chromiumLambda.defaultViewport,
       executablePath: await chromiumLambda.executablePath,
       headless: chromiumLambda.headless,
-    });
+    })) as puppeteer.Browser;
   } else {
     const executablePath = await findChrome(false);
 
     browser = await puppeteer.launch({
       headless: true,
-      defaultViewport: null,
+      defaultViewport: undefined,
       dumpio: false,
       executablePath: executablePath,
       args: mode === 'docker' ? launchOptionForLambda : undefined,

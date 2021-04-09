@@ -1,5 +1,5 @@
 import type { APIGatewayProxyResult, APIGatewayEvent, Context } from 'aws-lambda';
-import { Browser, ScreenshotOptions, ElementHandle, PDFOptions, PDFFormat, Page } from 'puppeteer';
+import { Browser, ScreenshotOptions, ElementHandle, PDFOptions, PaperFormat, Page } from 'puppeteer';
 import Ajv from 'ajv';
 import betterAjvErrors from 'better-ajv-errors';
 import fs from 'fs';
@@ -35,7 +35,7 @@ interface RenderPageConfigPdf {
   margin?: RenderPageConfigMargin;
   width?: string;
   height?: string;
-  format?: PDFFormat;
+  format?: PaperFormat;
   scale?: number;
   landscape?: boolean;
   printBackground?: boolean;
@@ -206,7 +206,7 @@ async function renderPage(
     element = await page.$(config.selector);
   }
 
-  let result;
+  let result: Buffer | string;
   if (config.type === 'pdf') {
     if (element) {
       throw new Error('selector not compatible with type pdf');
@@ -263,9 +263,9 @@ async function renderPage(
     }
 
     if (element) {
-      result = await element.screenshot(options);
+      result = (await element.screenshot(options)) as string | Buffer;
     } else {
-      result = await page.screenshot(options);
+      result = (await page.screenshot(options)) as string | Buffer;
     }
   }
 
@@ -454,8 +454,8 @@ export const handler = async (event: APIGatewayEvent, context: Context): Promise
 
   context.callbackWaitsForEmptyEventLoop = false;
   const browser = await getBrowser(browserMode, [
-    'https://raw.githack.com/googlei18n/noto-emoji/master/fonts/NotoColorEmoji.ttf',
-    'https://raw.githack.com/googlefonts/noto-cjk/master/NotoSansCJK-Regular.ttc',
+    'https://raw.githack.com/googlei18n/noto-emoji/aa34092a723d0493f3049060c91f653588829db4/fonts/NotoColorEmoji.ttf',
+    'https://raw.githack.com/googlefonts/noto-cjk/6d4400c1165860bed3732faa4db61687b8f216cb/Sans/OTC/NotoSansCJK-Regular.ttc',
   ]);
   try {
     const response = await handleEvent(event, browser);

@@ -4,21 +4,23 @@ provider:
   name: aws
   stage: dev
   region: us-west-2
-  runtime: nodejs12.x
+  runtime: nodejs14.x
   memorySize: 1536
   timeout: 30
   versionFunctions: false
   logRetentionInDays: 14
-  iamRoleStatements:
-    # S3 upload
-    - Effect: 'Allow'
-      Action:
-        - '*'
-      Resource: 'arn:aws:s3:::*'
-    - Effect: 'Allow'
-      Action:
-        - 'lambda:InvokeFunction'
-      Resource: 'arn:aws:lambda:::function:*'
+  iam:
+    role:
+      statements:
+        # S3 upload
+        - Effect: 'Allow'
+          Action:
+            - '*'
+          Resource: 'arn:aws:s3:::*'
+        - Effect: 'Allow'
+          Action:
+            - 'lambda:InvokeFunction'
+          Resource: 'arn:aws:lambda:::function:*'
   environment:
     FONTCONFIG_PATH: ./fonts
 

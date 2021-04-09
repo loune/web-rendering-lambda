@@ -1,12 +1,12 @@
 {
   "name": "web-rendering-lambda",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "description": "Serverless Lambda for rendering webpages to PNG, JPEG and PDF.",
   "repository": "https://github.com/loune/web-rendering-lambda.git",
   "author": "Loune Lam",
   "license": "MIT",
   "engines": {
-    "node": ">=12.14"
+    "node": ">=14.16"
   },
   "scripts": {
     "package": "yarn package-without-chrome",
@@ -34,8 +34,8 @@
     "archiver": "^5.0.2",
     "base64-stream": "^1.0.0",
     "better-ajv-errors": "^0.6.7",
-    "chrome-aws-lambda": "^2.1.1",
-    "puppeteer": "^2.1.1",
+    "chrome-aws-lambda": "^8.0.2",
+    "puppeteer": "^8.0.0",
     "tar": "^6.0.5",
     "vm2": "^3.9.2"
   },
@@ -48,8 +48,7 @@
     "@types/aws-lambda": "^8.10.47",
     "@types/base64-stream": "^1.0.0",
     "@types/jest": "^26.0.9",
-    "@types/node": "^12",
-    "@types/puppeteer": "^2.0.1",
+    "@types/node": "^14",
     "@types/tar": "^4.0.3",
     "@typescript-eslint/eslint-plugin": "^4.6.0",
     "@typescript-eslint/parser": "^4.6.0",

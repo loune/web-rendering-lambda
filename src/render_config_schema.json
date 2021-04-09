@@ -2,19 +2,20 @@
   "$ref": "#/definitions/RenderConfig",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
-    "PDFFormat": {
+    "PaperFormat": {
+      "description": "All the valid paper format types when printing a PDF.",
       "enum": [
-        "Letter",
-        "Legal",
-        "Tabloid",
-        "Ledger",
-        "A0",
-        "A1",
-        "A2",
-        "A3",
-        "A4",
-        "A5",
-        "A6"
+        "letter",
+        "legal",
+        "tabloid",
+        "ledger",
+        "a0",
+        "a1",
+        "a2",
+        "a3",
+        "a4",
+        "a5",
+        "a6"
       ],
       "type": "string"
     },
@@ -65,7 +66,7 @@
                   "type": "string"
                 },
                 "format": {
-                  "$ref": "#/definitions/PDFFormat"
+                  "$ref": "#/definitions/PaperFormat"
                 },
                 "headerTemplate": {
                   "type": "string"
@@ -217,7 +218,7 @@
                         "type": "string"
                       },
                       "format": {
-                        "$ref": "#/definitions/PDFFormat"
+                        "$ref": "#/definitions/PaperFormat"
                       },
                       "headerTemplate": {
                         "type": "string"
