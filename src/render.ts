@@ -7,6 +7,8 @@ import path from 'path';
 import { NodeVM } from 'vm2';
 import { getBrowser, closeBrowser, version, BrowserMode } from './chrome';
 import { archiveBase64, archiveToS3, saveToS3 } from './archive';
+import { getAuthorisedToken } from './authorization';
+import config from './config';
 
 export interface Query {
   url: string;
@@ -447,16 +449,29 @@ async function handleEvent(event: any, browser: any): Promise<APIGatewayProxyRes
 }
 
 export const handler = async (event: APIGatewayEvent, context: Context): Promise<APIGatewayProxyResult> => {
+  context.callbackWaitsForEmptyEventLoop = false;
   let browserMode: BrowserMode = 'local';
   if (event.requestContext.accountId !== undefined) {
     browserMode = event.requestContext.accountId === 'docker' ? 'docker' : 'lambda';
   }
 
-  context.callbackWaitsForEmptyEventLoop = false;
-  const browser = await getBrowser(browserMode, [
-    'https://raw.githack.com/googlei18n/noto-emoji/aa34092a723d0493f3049060c91f653588829db4/fonts/NotoColorEmoji.ttf',
-    'https://raw.githack.com/googlefonts/noto-cjk/6d4400c1165860bed3732faa4db61687b8f216cb/Sans/OTC/NotoSansCJK-Regular.ttc',
-  ]);
+  if (config.oauthIssuer) {
+    // OAuth2 bearer token authentication
+    const token = await getAuthorisedToken(
+      event.headers['authorization'] || event.headers['Authorization'],
+      config.oauthIssuer,
+      config.oauthRequiredAudience,
+      config.oauthRequiredScope
+    );
+
+    if (!token) {
+      return errorResponse(401, `Unauthorised`);
+    }
+
+    console.log(`Authorised as ${token.sub}`);
+  }
+
+  const browser = await getBrowser(browserMode, config.fontsURL);
   try {
     const response = await handleEvent(event, browser);
     return response;

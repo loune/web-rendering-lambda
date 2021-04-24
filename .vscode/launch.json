@@ -8,10 +8,9 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Debug",
-            "runtimeExecutable": "yarn",
-            "runtimeArgs": [
-                "debug"
-            ],
+            "runtimeExecutable": "node",
+            "runtimeArgs": ["--inspect-brk", "--max-http-header-size=32768", "dist/localserver.js"],
+            "outputCapture": "std",
             "preLaunchTask": "build",
             "port": 9229,
             "internalConsoleOptions": "openOnSessionStart"

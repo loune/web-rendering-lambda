@@ -27,7 +27,7 @@ http
           isBase64Encoded: false,
           httpMethod: request.method.toUpperCase(),
           path: requestUrl.pathname,
-          headers: {},
+          headers: request.headers,
           queryStringParameters: requestUrl.query,
           requestContext: {
             accountId: isDocker ? 'docker' : undefined,
