@@ -455,13 +455,15 @@ export const handler = async (event: APIGatewayEvent, context: Context): Promise
     browserMode = event.requestContext.accountId === 'docker' ? 'docker' : 'lambda';
   }
 
-  if (config.oauthIssuer) {
+  const serviceConfig = config();
+
+  if (serviceConfig.oauthIssuer) {
     // OAuth2 bearer token authentication
     const token = await getAuthorisedToken(
       event.headers['authorization'] || event.headers['Authorization'],
-      config.oauthIssuer,
-      config.oauthRequiredAudience,
-      config.oauthRequiredScope
+      serviceConfig.oauthIssuer,
+      serviceConfig.oauthRequiredAudience,
+      serviceConfig.oauthRequiredScope
     );
 
     if (!token) {
@@ -471,7 +473,7 @@ export const handler = async (event: APIGatewayEvent, context: Context): Promise
     console.log(`Authorised as ${token.sub}`);
   }
 
-  const browser = await getBrowser(browserMode, config.fontsURL);
+  const browser = await getBrowser(browserMode, serviceConfig.fontsURL);
   try {
     const response = await handleEvent(event, browser);
     return response;

@@ -2,8 +2,13 @@ import type { APIGatewayProxyResult, APIGatewayProxyEvent, Context } from 'aws-l
 import { Duplex } from 'stream';
 import unzip from 'unzip-stream';
 import { imageSize } from 'image-size';
+import http from 'http';
 import { handler, RenderConfig } from './render';
 import { closeBrowser } from './chrome';
+import * as config from './config';
+import * as mockedConfigTypes from './__mocks__/config';
+
+const mockedConfig = config as typeof mockedConfigTypes;
 
 declare global {
   // eslint-disable-next-line
@@ -14,6 +19,7 @@ declare global {
   }
 }
 
+jest.mock('./config');
 jest.setTimeout(30000);
 
 const dummyContext: Context = {} as Context;
@@ -58,6 +64,29 @@ function generateEvent(
   };
 
   return event;
+}
+
+function setupDummyAuthServer(port: number): http.Server {
+  return http
+    .createServer(function (req, res) {
+      if (req.url === '/oauth2/dummy/.well-known/openid-configuration') {
+        res.setHeader('content-type', 'application/json');
+        res.end(
+          `{"issuer":"http://localhost:${port}/oauth2/dummy","jwks_uri":"http://localhost:${port}/oauth2/dummy/v1/keys"}`
+        );
+        return;
+      } else if (req.url === '/oauth2/dummy/v1/keys') {
+        res.setHeader('content-type', 'application/json');
+        res.end(
+          `{"keys":[{"kty":"RSA","e":"AQAB","kid":"923aca74-022f-4f2f-96e9-45b3a43e7ca5","n":"nzyis1ZjfNB0bBgKFMSvvkTtwlvBsaJq7S5wA-kzeVOVpVWwkWdVha4s38XM_pa_yr47av7-z3VTmvDRyAHcaT92whREFpLv9cj5lTeJSibyr_Mrm_YtjCZVWgaOYIhwrXwKLqPr_11inWsAkfIytvHWTxZYEcXLgAXFuUuaS3uF9gEiNQwzGTU1v0FqkqTBr4B8nW3HCN47XUu0t8Y0e-lf4s4OxQawWD79J9_5d3Ry0vbV3Am1FtGJiJvOwRsIfVChDpYStTcHTCMqtvWbV6L11BWkpzGXSW4Hv43qa-GSYOD2QU68Mb59oSk2OB-BtOLpJofmbGEGgvmwyCI9Mw"}]}`
+        );
+        return;
+      }
+
+      res.statusCode = 404;
+      res.end('Not found');
+    })
+    .listen(port);
 }
 
 describe('handler with get', () => {
@@ -133,6 +162,100 @@ describe('handler with get', () => {
     expect(error).toBeFalsy();
     expect(response?.isBase64Encoded).toBe(true);
     expect(response?.statusCode).toBe(400);
+  });
+});
+
+describe('handler with get with security', () => {
+  const dummyPort = 49873;
+  afterEach(() => {
+    mockedConfig.mockSetConfig({});
+  });
+
+  it('render with authorisation', async () => {
+    (mockedConfig as any).mockSetConfig({
+      oauthIssuer: `http://localhost:${dummyPort}/oauth2/dummy`,
+      oauthRequiredScope: 'render',
+    });
+
+    const event = generateEvent('GET', { url: 'https://www.google.com.au/', type: 'png' }, null);
+
+    const dummyAuthServer = setupDummyAuthServer(dummyPort);
+
+    let response: APIGatewayProxyResult | undefined;
+    let error;
+    try {
+      const token =
+        'eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjQ5ODczL29hdXRoMi9kdW1teSIsInN1YiI6IjEyMzQ1Njc4OTAiLCJzY3AiOiJyZW5kZXIiLCJuYW1lIjoiRXhhbXBsZSBVc2VyIiwiaWF0IjoxNjE5ODI2NzA1LCJleHAiOjI2MTk4MjY3MDV9.hityl106tZxBOBFiyO7GGfjMbl6jesSI269fRUg6eN7FkbHfUFoJPsuJmAbsaADNnesXn8h-0HaZXVq7wpj2R1vpADpNjZnO6bGxroXX10xfm3MQhwW1pCuzzHb6Non8KUHOqJIL2oZ8m2JtXZjzX5EeHc_PD_HBY4AiHS87E0MKhNlGRdoCDZOWHl7isDE5bShDGnDF5T-lO-fTOCTJzgdOV7v-Ltc_FMCIZg0eApumdBTNUUEpyqtM9YJaVPRzjhUSFI8Wh40IlQC6xjm2LV0oIVD6UbeOkt6jGbv8WaGl6hZUjoEUoy8vzXtEAWhu6tC-tNNy1Juynt3wmqBrXg';
+      response = await handler({ ...event, headers: { authorization: `Bearer ${token}` } }, dummyContext);
+    } catch (err) {
+      error = err;
+    }
+
+    dummyAuthServer.close();
+
+    expect(response).not.toBeFalsy();
+    expect(response?.body).not.toBeFalsy();
+    expect(error).toBeFalsy();
+    expect(response?.isBase64Encoded).toBe(true);
+    expect(response?.statusCode).toBe(200);
+  });
+
+  it('authorisation failed with token expired', async () => {
+    mockedConfig.mockSetConfig({
+      oauthIssuer: `http://localhost:${dummyPort}/oauth2/dummy`,
+      oauthRequiredScope: 'render',
+    });
+    const event = generateEvent('GET', { url: 'https://www.google.com.au/', type: 'png' }, null);
+
+    const dummyAuthServer = setupDummyAuthServer(dummyPort);
+
+    let response: APIGatewayProxyResult | undefined;
+    let error;
+    try {
+      const token =
+        'eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjQ5ODczL29hdXRoMi9kdW1teSIsInN1YiI6IjEyMzQ1Njc4OTAiLCJzY3AiOiJyZW5kZXIiLCJuYW1lIjoiRXhhbXBsZSBVc2VyIiwiaWF0IjoxNjE5ODI2NzA1LCJleHAiOjE2MTk4MjY3MDZ9.Eq3TgSEUvHOJ8Ro6q0yutr8NC-PgGAYx1-A1e5ICARAcU1ieXc2hpDZDHDyZLFfMFR1ltIDGRXCmF-MaiDXkN1oepS68-1p9hAZ1XvEHkiMcBdcV28-B8wrRIDkPnn5sn78lMj6hy0ccLtgKc3wTGPhz6xUVRnV8K0kA3UhTSg13jGFF0IRnKn1Go_94y7P1NTTmyY-h97T8IYBr8_QD6ZWMN7bns1bs9VR7qrqGhMIvtRTKQFriDkp-s8S_lQo0wMVPosKn9gjWEyjaESv2HplK1cpvKuzJMYACXf6zQuONqhAjsWRVYjxvplPHwFVnRicKXQEcNQD34eIeacOOrA';
+      response = await handler({ ...event, headers: { authorization: `Bearer ${token}` } }, dummyContext);
+    } catch (err) {
+      error = err;
+    }
+
+    dummyAuthServer.close();
+
+    expect(response).not.toBeFalsy();
+    expect(response?.body).not.toBeFalsy();
+    expect(error).toBeFalsy();
+    expect(response?.isBase64Encoded).toBe(true);
+    expect(response?.statusCode).toBe(401);
+  });
+
+  it('authorisation failed with invalid scope', async () => {
+    mockedConfig.mockSetConfig({
+      oauthIssuer: `http://localhost:${dummyPort}/oauth2/dummy`,
+      oauthRequiredScope: 'render',
+    });
+    console.log('unit test', mockedConfig.default());
+
+    const event = generateEvent('GET', { url: 'https://www.google.com.au/', type: 'png' }, null);
+
+    const dummyAuthServer = setupDummyAuthServer(dummyPort);
+
+    let response: APIGatewayProxyResult | undefined;
+    let error;
+    try {
+      const token =
+        'eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjQ5ODczL29hdXRoMi9kdW1teSIsInN1YiI6IjEyMzQ1Njc4OTAiLCJzY3AiOiJzb21ldGhpbmciLCJuYW1lIjoiRXhhbXBsZSBVc2VyIiwiaWF0IjoxNjE5ODI2NzA1LCJleHAiOjI2MTk4MjY3MDZ9.H46FAgN4p-SDMP4rrAmn1IvQsAZN7rpb4pEcl26P4dhFi0q2lQ__c_t4D6hjySgo3-EeyUnbuy7gEkFGrkDwrlfpX4n1STphrZ3BUMXGjr3LvAkFqNPYOB5JuvD7Znb8-sdRAQiKAou5Gv-XV6niTnH3uYKlPJvM8z34zWXM5m8YJpDKdUduJa82ueJVGOSHI_3kIss70W1kz5kSx200wYHoT6rrsqkLreubzPf27YS5he4fkRN9UTwnXmXi21rhjRxIg1xN55-0usXYiIzM_k0iwM0UwaNp6ov6eWlc6cFdNhd-wjdFsrNds4P51GfqAE9wtcdzMr1t7FoKCiTwOA';
+      response = await handler({ ...event, headers: { authorization: `Bearer ${token}` } }, dummyContext);
+    } catch (err) {
+      error = err;
+    }
+
+    dummyAuthServer.close();
+
+    expect(response).not.toBeFalsy();
+    expect(response?.body).not.toBeFalsy();
+    expect(error).toBeFalsy();
+    expect(response?.isBase64Encoded).toBe(true);
+    expect(response?.statusCode).toBe(401);
   });
 });
 

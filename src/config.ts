@@ -13,4 +13,5 @@ const config: Config = {
   // oauthIssuer: 'https://',
   // oauthRequiredScope: 'rendering',
 };
-export default config;
+
+export default (): Config => config;
