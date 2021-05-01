@@ -30,7 +30,7 @@
     "generate-types": "ts-json-schema-generator --tsconfig ./tsconfig.json --path './src/render.ts' --type 'RenderConfig' -o ./src/render_config_schema.json"
   },
   "dependencies": {
-    "ajv": "^6.12.2",
+    "ajv": "^6",
     "archiver": "^5.0.2",
     "base64-stream": "^1.0.0",
     "better-ajv-errors": "^0.6.7",
@@ -60,7 +60,7 @@
     "eslint-import-resolver-typescript": "^2.3.0",
     "eslint-plugin-import": "^2.22.0",
     "eslint-plugin-prettier": "^3.1.4",
-    "image-size": "^0.8.3",
+    "image-size": "^1.0.0",
     "jest": "^26.6.1",
     "nodemon": "^2.0.6",
     "prettier": "^2.0.5",
