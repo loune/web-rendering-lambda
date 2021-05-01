@@ -75,6 +75,12 @@ function setupDummyAuthServer(port: number): http.Server {
           `{"issuer":"http://localhost:${port}/oauth2/dummy","jwks_uri":"http://localhost:${port}/oauth2/dummy/v1/keys"}`
         );
         return;
+      } else if (req.url === '/oauth2/dummy-no-jwks/.well-known/openid-configuration') {
+        res.setHeader('content-type', 'application/json');
+        res.end(
+          `{"issuer":"http://localhost:${port}/oauth2/dummy-no-jwks","jwks_uri":"http://localhost:${port}/oauth2/dummy-no-jwks/v1/keys"}`
+        );
+        return;
       } else if (req.url === '/oauth2/dummy/v1/keys') {
         res.setHeader('content-type', 'application/json');
         res.end(
@@ -167,95 +173,77 @@ describe('handler with get', () => {
 
 describe('handler with get with security', () => {
   const dummyPort = 49873;
+  let dummyAuthServer: http.Server;
+  beforeAll(() => {
+    dummyAuthServer = setupDummyAuthServer(dummyPort);
+  });
+
+  afterAll(() => {
+    dummyAuthServer.close();
+  });
+
   afterEach(() => {
     mockedConfig.mockSetConfig({});
   });
 
-  it('render with authorisation', async () => {
+  it.each([
+    [
+      'render with authorisation',
+      `http://localhost:${dummyPort}/oauth2/dummy`,
+      200,
+      'eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjQ5ODczL29hdXRoMi9kdW1teSIsInN1YiI6IjEyMzQ1Njc4OTAiLCJzY3AiOiJyZW5kZXIiLCJuYW1lIjoiRXhhbXBsZSBVc2VyIiwiaWF0IjoxNjE5ODI2NzA1LCJleHAiOjI2MTk4MjY3MDV9.hityl106tZxBOBFiyO7GGfjMbl6jesSI269fRUg6eN7FkbHfUFoJPsuJmAbsaADNnesXn8h-0HaZXVq7wpj2R1vpADpNjZnO6bGxroXX10xfm3MQhwW1pCuzzHb6Non8KUHOqJIL2oZ8m2JtXZjzX5EeHc_PD_HBY4AiHS87E0MKhNlGRdoCDZOWHl7isDE5bShDGnDF5T-lO-fTOCTJzgdOV7v-Ltc_FMCIZg0eApumdBTNUUEpyqtM9YJaVPRzjhUSFI8Wh40IlQC6xjm2LV0oIVD6UbeOkt6jGbv8WaGl6hZUjoEUoy8vzXtEAWhu6tC-tNNy1Juynt3wmqBrXg',
+    ],
+    [
+      'authorisation failed with unable to get openid-configuration',
+      `http://localhost:9/oauth2/dummy`,
+      401,
+      'eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjQ5ODczL29hdXRoMi9kdW1teSIsInN1YiI6IjEyMzQ1Njc4OTAiLCJzY3AiOiJyZW5kZXIiLCJuYW1lIjoiRXhhbXBsZSBVc2VyIiwiaWF0IjoxNjE5ODI2NzA1LCJleHAiOjI2MTk4MjY3MDV9.hityl106tZxBOBFiyO7GGfjMbl6jesSI269fRUg6eN7FkbHfUFoJPsuJmAbsaADNnesXn8h-0HaZXVq7wpj2R1vpADpNjZnO6bGxroXX10xfm3MQhwW1pCuzzHb6Non8KUHOqJIL2oZ8m2JtXZjzX5EeHc_PD_HBY4AiHS87E0MKhNlGRdoCDZOWHl7isDE5bShDGnDF5T-lO-fTOCTJzgdOV7v-Ltc_FMCIZg0eApumdBTNUUEpyqtM9YJaVPRzjhUSFI8Wh40IlQC6xjm2LV0oIVD6UbeOkt6jGbv8WaGl6hZUjoEUoy8vzXtEAWhu6tC-tNNy1Juynt3wmqBrXg',
+    ],
+    [
+      'authorisation failed with unable to get JWKS',
+      `http://localhost:${dummyPort}/oauth2/dummy-no-jwks`,
+      401,
+      'eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjQ5ODczL29hdXRoMi9kdW1teSIsInN1YiI6IjEyMzQ1Njc4OTAiLCJzY3AiOiJyZW5kZXIiLCJuYW1lIjoiRXhhbXBsZSBVc2VyIiwiaWF0IjoxNjE5ODI2NzA1LCJleHAiOjI2MTk4MjY3MDV9.hityl106tZxBOBFiyO7GGfjMbl6jesSI269fRUg6eN7FkbHfUFoJPsuJmAbsaADNnesXn8h-0HaZXVq7wpj2R1vpADpNjZnO6bGxroXX10xfm3MQhwW1pCuzzHb6Non8KUHOqJIL2oZ8m2JtXZjzX5EeHc_PD_HBY4AiHS87E0MKhNlGRdoCDZOWHl7isDE5bShDGnDF5T-lO-fTOCTJzgdOV7v-Ltc_FMCIZg0eApumdBTNUUEpyqtM9YJaVPRzjhUSFI8Wh40IlQC6xjm2LV0oIVD6UbeOkt6jGbv8WaGl6hZUjoEUoy8vzXtEAWhu6tC-tNNy1Juynt3wmqBrXg',
+    ],
+    [
+      'authorisation failed with token expired',
+      `http://localhost:${dummyPort}/oauth2/dummy`,
+      401,
+      'eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjQ5ODczL29hdXRoMi9kdW1teSIsInN1YiI6IjEyMzQ1Njc4OTAiLCJzY3AiOiJyZW5kZXIiLCJuYW1lIjoiRXhhbXBsZSBVc2VyIiwiaWF0IjoxNjE5ODI2NzA1LCJleHAiOjE2MTk4MjY3MDZ9.Eq3TgSEUvHOJ8Ro6q0yutr8NC-PgGAYx1-A1e5ICARAcU1ieXc2hpDZDHDyZLFfMFR1ltIDGRXCmF-MaiDXkN1oepS68-1p9hAZ1XvEHkiMcBdcV28-B8wrRIDkPnn5sn78lMj6hy0ccLtgKc3wTGPhz6xUVRnV8K0kA3UhTSg13jGFF0IRnKn1Go_94y7P1NTTmyY-h97T8IYBr8_QD6ZWMN7bns1bs9VR7qrqGhMIvtRTKQFriDkp-s8S_lQo0wMVPosKn9gjWEyjaESv2HplK1cpvKuzJMYACXf6zQuONqhAjsWRVYjxvplPHwFVnRicKXQEcNQD34eIeacOOrA',
+    ],
+    [
+      'authorisation failed with invalid scope',
+      `http://localhost:${dummyPort}/oauth2/dummy`,
+      401,
+      'eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjQ5ODczL29hdXRoMi9kdW1teSIsInN1YiI6IjEyMzQ1Njc4OTAiLCJzY3AiOiJzb21ldGhpbmciLCJuYW1lIjoiRXhhbXBsZSBVc2VyIiwiaWF0IjoxNjE5ODI2NzA1LCJleHAiOjI2MTk4MjY3MDZ9.H46FAgN4p-SDMP4rrAmn1IvQsAZN7rpb4pEcl26P4dhFi0q2lQ__c_t4D6hjySgo3-EeyUnbuy7gEkFGrkDwrlfpX4n1STphrZ3BUMXGjr3LvAkFqNPYOB5JuvD7Znb8-sdRAQiKAou5Gv-XV6niTnH3uYKlPJvM8z34zWXM5m8YJpDKdUduJa82ueJVGOSHI_3kIss70W1kz5kSx200wYHoT6rrsqkLreubzPf27YS5he4fkRN9UTwnXmXi21rhjRxIg1xN55-0usXYiIzM_k0iwM0UwaNp6ov6eWlc6cFdNhd-wjdFsrNds4P51GfqAE9wtcdzMr1t7FoKCiTwOA',
+    ],
+    [
+      'authorisation failed with invalid token signature',
+      `http://localhost:${dummyPort}/oauth2/dummy`,
+      401,
+      'eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjQ5ODczL29hdXRoMi9kdW1teSIsInN1YiI6IjEyMzQ1Njc4OTAiLCJzY3AiOiJzb21ldGhpbmciLCJuYW1lIjoiRXhhbXBsZSBVc2VyIiwiaWF0IjoxNjE5ODI2NzA1LCJleHAiOjI2MTk4MjY3MDZ9.upxGd22HMi-1ARYGpXYcMHlZTvCqCtOMT4tu4q7MOjfGvsQaJt-dHneUAAT7G7FmCDyslfEWud6cQAbYtjC5kPNuvwYGZbaJbQOd5E-Xx3e7SXUk3j0AA5liCmJto6wAXFsnDrQ4JK8026pD5f7go1kHcKX13HJV4KyxqmzBgGY',
+    ],
+  ])('%s', async (description: string, oauthIssuer: string, statusCode: number, token: string) => {
     (mockedConfig as any).mockSetConfig({
-      oauthIssuer: `http://localhost:${dummyPort}/oauth2/dummy`,
+      oauthIssuer,
       oauthRequiredScope: 'render',
     });
 
     const event = generateEvent('GET', { url: 'https://www.google.com.au/', type: 'png' }, null);
 
-    const dummyAuthServer = setupDummyAuthServer(dummyPort);
-
     let response: APIGatewayProxyResult | undefined;
     let error;
     try {
-      const token =
-        'eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjQ5ODczL29hdXRoMi9kdW1teSIsInN1YiI6IjEyMzQ1Njc4OTAiLCJzY3AiOiJyZW5kZXIiLCJuYW1lIjoiRXhhbXBsZSBVc2VyIiwiaWF0IjoxNjE5ODI2NzA1LCJleHAiOjI2MTk4MjY3MDV9.hityl106tZxBOBFiyO7GGfjMbl6jesSI269fRUg6eN7FkbHfUFoJPsuJmAbsaADNnesXn8h-0HaZXVq7wpj2R1vpADpNjZnO6bGxroXX10xfm3MQhwW1pCuzzHb6Non8KUHOqJIL2oZ8m2JtXZjzX5EeHc_PD_HBY4AiHS87E0MKhNlGRdoCDZOWHl7isDE5bShDGnDF5T-lO-fTOCTJzgdOV7v-Ltc_FMCIZg0eApumdBTNUUEpyqtM9YJaVPRzjhUSFI8Wh40IlQC6xjm2LV0oIVD6UbeOkt6jGbv8WaGl6hZUjoEUoy8vzXtEAWhu6tC-tNNy1Juynt3wmqBrXg';
       response = await handler({ ...event, headers: { authorization: `Bearer ${token}` } }, dummyContext);
     } catch (err) {
       error = err;
     }
 
-    dummyAuthServer.close();
-
     expect(response).not.toBeFalsy();
     expect(response?.body).not.toBeFalsy();
     expect(error).toBeFalsy();
     expect(response?.isBase64Encoded).toBe(true);
-    expect(response?.statusCode).toBe(200);
-  });
-
-  it('authorisation failed with token expired', async () => {
-    mockedConfig.mockSetConfig({
-      oauthIssuer: `http://localhost:${dummyPort}/oauth2/dummy`,
-      oauthRequiredScope: 'render',
-    });
-    const event = generateEvent('GET', { url: 'https://www.google.com.au/', type: 'png' }, null);
-
-    const dummyAuthServer = setupDummyAuthServer(dummyPort);
-
-    let response: APIGatewayProxyResult | undefined;
-    let error;
-    try {
-      const token =
-        'eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjQ5ODczL29hdXRoMi9kdW1teSIsInN1YiI6IjEyMzQ1Njc4OTAiLCJzY3AiOiJyZW5kZXIiLCJuYW1lIjoiRXhhbXBsZSBVc2VyIiwiaWF0IjoxNjE5ODI2NzA1LCJleHAiOjE2MTk4MjY3MDZ9.Eq3TgSEUvHOJ8Ro6q0yutr8NC-PgGAYx1-A1e5ICARAcU1ieXc2hpDZDHDyZLFfMFR1ltIDGRXCmF-MaiDXkN1oepS68-1p9hAZ1XvEHkiMcBdcV28-B8wrRIDkPnn5sn78lMj6hy0ccLtgKc3wTGPhz6xUVRnV8K0kA3UhTSg13jGFF0IRnKn1Go_94y7P1NTTmyY-h97T8IYBr8_QD6ZWMN7bns1bs9VR7qrqGhMIvtRTKQFriDkp-s8S_lQo0wMVPosKn9gjWEyjaESv2HplK1cpvKuzJMYACXf6zQuONqhAjsWRVYjxvplPHwFVnRicKXQEcNQD34eIeacOOrA';
-      response = await handler({ ...event, headers: { authorization: `Bearer ${token}` } }, dummyContext);
-    } catch (err) {
-      error = err;
-    }
-
-    dummyAuthServer.close();
-
-    expect(response).not.toBeFalsy();
-    expect(response?.body).not.toBeFalsy();
-    expect(error).toBeFalsy();
-    expect(response?.isBase64Encoded).toBe(true);
-    expect(response?.statusCode).toBe(401);
-  });
-
-  it('authorisation failed with invalid scope', async () => {
-    mockedConfig.mockSetConfig({
-      oauthIssuer: `http://localhost:${dummyPort}/oauth2/dummy`,
-      oauthRequiredScope: 'render',
-    });
-    console.log('unit test', mockedConfig.default());
-
-    const event = generateEvent('GET', { url: 'https://www.google.com.au/', type: 'png' }, null);
-
-    const dummyAuthServer = setupDummyAuthServer(dummyPort);
-
-    let response: APIGatewayProxyResult | undefined;
-    let error;
-    try {
-      const token =
-        'eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjQ5ODczL29hdXRoMi9kdW1teSIsInN1YiI6IjEyMzQ1Njc4OTAiLCJzY3AiOiJzb21ldGhpbmciLCJuYW1lIjoiRXhhbXBsZSBVc2VyIiwiaWF0IjoxNjE5ODI2NzA1LCJleHAiOjI2MTk4MjY3MDZ9.H46FAgN4p-SDMP4rrAmn1IvQsAZN7rpb4pEcl26P4dhFi0q2lQ__c_t4D6hjySgo3-EeyUnbuy7gEkFGrkDwrlfpX4n1STphrZ3BUMXGjr3LvAkFqNPYOB5JuvD7Znb8-sdRAQiKAou5Gv-XV6niTnH3uYKlPJvM8z34zWXM5m8YJpDKdUduJa82ueJVGOSHI_3kIss70W1kz5kSx200wYHoT6rrsqkLreubzPf27YS5he4fkRN9UTwnXmXi21rhjRxIg1xN55-0usXYiIzM_k0iwM0UwaNp6ov6eWlc6cFdNhd-wjdFsrNds4P51GfqAE9wtcdzMr1t7FoKCiTwOA';
-      response = await handler({ ...event, headers: { authorization: `Bearer ${token}` } }, dummyContext);
-    } catch (err) {
-      error = err;
-    }
-
-    dummyAuthServer.close();
-
-    expect(response).not.toBeFalsy();
-    expect(response?.body).not.toBeFalsy();
-    expect(error).toBeFalsy();
-    expect(response?.isBase64Encoded).toBe(true);
-    expect(response?.statusCode).toBe(401);
+    expect(response?.statusCode).toBe(statusCode);
   });
 });
 
