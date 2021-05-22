@@ -1,9 +1,10 @@
-import { handler } from './render';
 import * as http from 'http';
-import * as url from 'url';
 import type { Context } from 'aws-lambda';
+import { handler } from './render';
+import configFunc from './config';
 
-const port = process.env.PORT || 8008;
+const config = configFunc();
+const port = process.env.PORT || config.localPort;
 const isDocker = process.env.IS_DOCKER;
 
 http
@@ -19,7 +20,7 @@ http
           throw new Error('Url or method not defined');
         }
 
-        const requestUrl = url.parse(request.url, true);
+        const requestUrl = new URL(`http://localhost${request.url}`);
         const body = Buffer.concat(bodyChunks).toString();
 
         const event: any = {
@@ -28,7 +29,7 @@ http
           httpMethod: request.method.toUpperCase(),
           path: requestUrl.pathname,
           headers: request.headers,
-          queryStringParameters: requestUrl.query,
+          queryStringParameters: Object.fromEntries(requestUrl.searchParams as unknown as Iterable<any>),
           requestContext: {
             accountId: isDocker ? 'docker' : undefined,
             httpMethod: request.method.toUpperCase(),
