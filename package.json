@@ -37,7 +37,7 @@
     "chrome-aws-lambda": "^8.0.2",
     "jose": "^3.11.5",
     "puppeteer": "^8.0.0",
-    "tar": "^6.1.2",
+    "tar": "^6.1.9",
     "vm2": "^3.9.2"
   },
   "devDependencies": {
