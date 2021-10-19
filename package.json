@@ -38,7 +38,7 @@
     "jose": "^3.11.5",
     "puppeteer": "^8.0.0",
     "tar": "^6.1.9",
-    "vm2": "^3.9.2"
+    "vm2": "^3.9.4"
   },
   "devDependencies": {
     "@babel/cli": "^7.8.4",
