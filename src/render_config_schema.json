@@ -327,9 +327,7 @@
               "type": "string"
             },
             "type": {
-              "enum": [
-                "zip"
-              ],
+              "const": "zip",
               "type": "string"
             }
           },
@@ -346,9 +344,7 @@
               "type": "string"
             },
             "type": {
-              "enum": [
-                "script"
-              ],
+              "const": "script",
               "type": "string"
             }
           },

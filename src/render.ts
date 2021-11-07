@@ -1,6 +1,6 @@
 import type { APIGatewayProxyResult, APIGatewayEvent, Context } from 'aws-lambda';
 import { Browser, ScreenshotOptions, ElementHandle, PDFOptions, PaperFormat, Page } from 'puppeteer';
-import Ajv from 'ajv';
+import Ajv, { ValidateFunction } from 'ajv';
 import betterAjvErrors from 'better-ajv-errors';
 import fs from 'fs';
 import path from 'path';
@@ -98,14 +98,14 @@ const defaultViewportWidth = 1280;
 const defaultViewportHeight = 800;
 const defaultViewportdeviceScaleFactor = 1;
 
-let globalValidate: { validate: Ajv.ValidateFunction; schema: string } | undefined;
+let globalValidate: { validate: ValidateFunction; schema: string } | undefined;
 
-function getValidator(): { validate: Ajv.ValidateFunction; schema: string } {
+function getValidator(): { validate: ValidateFunction; schema: string } {
   if (globalValidate) {
     return globalValidate;
   }
 
-  const ajv = new Ajv({ jsonPointers: true });
+  const ajv = new Ajv();
   const schema = JSON.parse(fs.readFileSync(path.join(__dirname, 'render_config_schema.json'), 'utf-8'));
   globalValidate = { validate: ajv.compile(schema), schema };
   return globalValidate;
@@ -193,7 +193,7 @@ async function renderPage(
         waitUntil: ['domcontentloaded', 'networkidle0'],
       });
     }
-  } catch (e) {
+  } catch (e: any) {
     if (e.name !== 'TimeoutError') {
       throw e;
     }
@@ -402,7 +402,7 @@ async function post(bodyStr: string, browser: Browser): Promise<APIGatewayProxyR
       console.error(validate.errors);
       return errorResponse(400, { error: betterAjvErrors(schema, body, validate.errors, { format: 'js' }) });
     }
-  } catch (e) {
+  } catch (e: any) {
     return errorResponse(400, e.message);
   }
 
@@ -477,7 +477,7 @@ export const handler = async (event: APIGatewayEvent, context: Context): Promise
   try {
     const response = await handleEvent(event, browser);
     return response;
-  } catch (e) {
+  } catch (e: any) {
     closeBrowser();
 
     if (e.message.includes('Protocol error') && !(event as any).isOurRetry) {

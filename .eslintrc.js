@@ -1,5 +1,11 @@
 module.exports = {
-  extends: ['plugin:@typescript-eslint/recommended', 'prettier/@typescript-eslint', 'plugin:prettier/recommended'],
+  extends: [
+    'plugin:@typescript-eslint/recommended',
+    'prettier',
+    'plugin:prettier/recommended',
+    'plugin:import/recommended',
+    'plugin:import/typescript',
+  ],
   plugins: ['@typescript-eslint'],
   rules: { 'require-jsdoc': 'off', 'no-console': 'off' },
   overrides: [
@@ -15,6 +21,7 @@ module.exports = {
         },
       },
       rules: {
+        'import/namespace': 'off',
         '@typescript-eslint/no-explicit-any': 'off',
       },
     },

@@ -1,9 +1,8 @@
 import got from 'got';
-import { createRemoteJWKSet } from 'jose/webcrypto/jwks/remote';
-import { JWTPayload, jwtVerify } from 'jose/webcrypto/jwt/verify';
-import { FlattenedJWSInput, GetKeyFunction, JWSHeaderParameters } from 'jose/webcrypto/types';
+import { createRemoteJWKSet, JWTPayload, jwtVerify, JWTVerifyGetKey } from 'jose';
+import { URL } from 'url';
 
-let globalJWKS: GetKeyFunction<JWSHeaderParameters, FlattenedJWSInput> | undefined;
+let globalJWKS: JWTVerifyGetKey | undefined;
 
 export async function getAuthorisedToken(
   authorizationHeader: string | undefined,

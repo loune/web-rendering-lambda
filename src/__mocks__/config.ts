@@ -1,6 +1,6 @@
 import { Config } from '../config';
 
-let config: Config = { oauthRequiredAudience: 'sdf' };
+let config: Config = { oauthRequiredAudience: 'sdf', localPort: 3000 };
 
 export function mockSetConfig(myConfig: Config): void {
   config = myConfig;

@@ -183,7 +183,7 @@ describe('handler with get with security', () => {
   });
 
   afterEach(() => {
-    mockedConfig.mockSetConfig({});
+    mockedConfig.mockSetConfig({ localPort: 3000 });
   });
 
   it.each([

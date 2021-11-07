@@ -1,5 +1,6 @@
 import * as http from 'http';
 import type { Context } from 'aws-lambda';
+import { URL } from 'url';
 import { handler } from './render';
 import configFunc from './config';
 
@@ -45,7 +46,7 @@ http
             : Buffer.from(renderResult.body);
           response.write(buf);
           response.end();
-        } catch (error) {
+        } catch (error: any) {
           response.writeHead(500);
           response.end(error.message);
         }
