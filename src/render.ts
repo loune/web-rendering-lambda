@@ -400,7 +400,9 @@ async function post(bodyStr: string, browser: Browser): Promise<APIGatewayProxyR
     const valid = validate(body);
     if (!valid) {
       console.error(validate.errors);
-      return errorResponse(400, { error: betterAjvErrors(schema, body, validate.errors, { format: 'js' }) });
+      return errorResponse(400, {
+        error: validate.errors ? betterAjvErrors(schema, body, validate.errors, { format: 'js' }) : undefined,
+      });
     }
   } catch (e: any) {
     return errorResponse(400, e.message);

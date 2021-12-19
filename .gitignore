@@ -1,5 +1,5 @@
 dist
-package.zip
+package*.zip
 
 # General
 .DS_Store
@@ -105,3 +105,5 @@ typings/
 
 # FuseBox cache
 .fusebox/
+
+tsconfig.tsbuildinfo
