@@ -10,7 +10,8 @@
     "noEmit": true,
     "pretty": true,
     "incremental": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "outDir": "dist"
   },
   "include": ["src"]
 }
