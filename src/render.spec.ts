@@ -7,6 +7,7 @@ import { handler, RenderConfig } from './render';
 import { closeBrowser } from './chrome';
 import * as config from './config';
 import * as mockedConfigTypes from './__mocks__/config';
+import { Config } from './config';
 
 const mockedConfig = config as typeof mockedConfigTypes;
 
@@ -226,8 +227,9 @@ describe('handler with get with security', () => {
   ])('%s', async (description: string, oauthIssuer: string, statusCode: number, token: string) => {
     (mockedConfig as any).mockSetConfig({
       oauthIssuer,
-      oauthRequiredScope: 'render',
-    });
+      oauthTokenScopeCheck: payload =>
+        (typeof payload.scp === 'object' && (payload.scp as any).includes('render')) || payload.scp === 'render',
+    } as Config);
 
     const event = generateEvent('GET', { url: 'https://www.google.com.au/', type: 'png' }, null);
 

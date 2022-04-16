@@ -465,7 +465,7 @@ export const handler = async (event: APIGatewayEvent, context: Context): Promise
       event.headers['authorization'] || event.headers['Authorization'],
       serviceConfig.oauthIssuer,
       serviceConfig.oauthRequiredAudience,
-      serviceConfig.oauthRequiredScope
+      serviceConfig.oauthTokenScopeCheck
     );
 
     if (!token) {

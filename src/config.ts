@@ -1,8 +1,10 @@
+import { JWTPayload } from 'jose';
+
 export interface Config {
   fontsURL?: string[];
   oauthIssuer?: string;
   oauthRequiredAudience?: string;
-  oauthRequiredScope?: string;
+  oauthTokenScopeCheck?: (token: JWTPayload) => boolean;
   localPort: number;
 }
 
