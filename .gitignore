@@ -1,3 +1,5 @@
+.envrc
+.idea/
 dist
 package*.zip
 

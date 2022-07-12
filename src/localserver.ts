@@ -2,11 +2,8 @@ import * as http from 'http';
 import type { Context } from 'aws-lambda';
 import { URL } from 'url';
 import { handler } from './render';
-import configFunc from './config';
 
-const config = configFunc();
-const port = process.env.PORT || config.localPort;
-const isDocker = process.env.IS_DOCKER;
+const port = process.env.PORT || 8008;
 
 http
   .createServer((request, response) => {
@@ -32,7 +29,6 @@ http
           headers: request.headers,
           queryStringParameters: Object.fromEntries(requestUrl.searchParams as unknown as Iterable<any>),
           requestContext: {
-            accountId: isDocker ? 'docker' : undefined,
             httpMethod: request.method.toUpperCase(),
             path: requestUrl.pathname,
           },

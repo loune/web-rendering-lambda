@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
 import chromiumLambda from 'chrome-aws-lambda';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -18,6 +18,41 @@ const launchOptionForLambda = [
   '--disable-gpu',
   // freeze when newPage()
   '--single-process',
+
+  '--disable-webaudio',
+  '--disable-dev-shm-usage',
+  '--autoplay-policy=user-gesture-required', // https://source.chromium.org/search?q=lang:cpp+symbol:kAutoplayPolicy&ss=chromium
+  '--disable-blink-features=AutomationControlled', // https://blog.m157q.tw/posts/2020/09/11/bypass-cloudflare-detection-while-using-selenium-with-chromedriver/
+  '--disable-cloud-import',
+  '--disable-component-update', // https://source.chromium.org/search?q=lang:cpp+symbol:kDisableComponentUpdate&ss=chromium
+  '--disable-domain-reliability', // https://source.chromium.org/search?q=lang:cpp+symbol:kDisableDomainReliability&ss=chromium
+  '--disable-features=AudioServiceOutOfProcess,IsolateOrigins,site-per-process', // https://source.chromium.org/search?q=file:content_features.cc&ss=chromium
+  '--disable-gesture-typing',
+  '--disable-infobars',
+  '--disable-notifications',
+  '--disable-offer-store-unmasked-wallet-cards',
+  '--disable-offer-upload-credit-cards',
+  '--disable-print-preview', // https://source.chromium.org/search?q=lang:cpp+symbol:kDisablePrintPreview&ss=chromium
+  '--disable-setuid-sandbox', // https://source.chromium.org/search?q=lang:cpp+symbol:kDisableSetuidSandbox&ss=chromium
+  '--disable-site-isolation-trials', // https://source.chromium.org/search?q=lang:cpp+symbol:kDisableSiteIsolation&ss=chromium
+  '--disable-speech-api', // https://source.chromium.org/search?q=lang:cpp+symbol:kDisableSpeechAPI&ss=chromium
+  '--disable-tab-for-desktop-share',
+  '--disable-translate',
+  '--disable-voice-input',
+  '--disable-wake-on-wifi',
+  '--enable-async-dns',
+  '--enable-simple-cache-backend',
+  '--enable-tcp-fast-open',
+  '--enable-webgl',
+  '--force-webrtc-ip-handling-policy=default_public_interface_only',
+  '--ignore-gpu-blocklist', // https://source.chromium.org/search?q=lang:cpp+symbol:kIgnoreGpuBlocklist&ss=chromium
+  '--in-process-gpu', // https://source.chromium.org/search?q=lang:cpp+symbol:kInProcessGPU&ss=chromium
+  '--no-default-browser-check', // https://source.chromium.org/search?q=lang:cpp+symbol:kNoDefaultBrowserCheck&ss=chromium
+  '--no-pings', // https://source.chromium.org/search?q=lang:cpp+symbol:kNoPings&ss=chromium
+  '--no-sandbox', // https://source.chromium.org/search?q=lang:cpp+symbol:kNoSandbox&ss=chromium
+  '--no-zygote', // https://source.chromium.org/search?q=lang:cpp+symbol:kNoZygote&ss=chromium
+  '--prerender-from-omnibox=disabled',
+  '--use-gl=swiftshader', // https://source.chromium.org/search?q=lang:cpp+symbol:kUseGl&ss=chromium
 ];
 
 let browser: puppeteer.Browser | null = null;
@@ -45,120 +80,33 @@ async function browserOk(browser: puppeteer.Browser | null): Promise<boolean> {
     version = await browser.version();
     return true;
   } catch (e) {
-    closeBrowser();
+    await closeBrowser();
   }
 
   return false;
 }
 
-export async function findChrome(isLambda: boolean): Promise<string | undefined> {
-  if (!isLambda) {
-    return undefined;
-  }
-
-  const tmpPath = '/tmp';
-  const chromePathUncompressed = path.join(__dirname, chromeExeFilname);
-
-  if (fs.existsSync(chromePathUncompressed)) {
-    return chromePathUncompressed;
-  }
-
-  const chromePathTmp = path.join(tmpPath, chromeExeFilname);
-  const chromePathTgz = path.join(__dirname, chromeTgzFilename);
-
-  if (fs.existsSync(chromePathTmp)) {
-    return chromePathTmp;
-  }
-
-  if (fs.existsSync(chromePathTgz)) {
-    await new Promise<void>((resolve, reject) => {
-      fs.createReadStream(chromePathTgz)
-        .on('error', err => reject(err))
-        .pipe(
-          tar.x({
-            C: tmpPath,
-          })
-        )
-        .on('error', err => reject(err))
-        .on('end', () => resolve());
-    });
-
-    return chromePathTmp;
-  }
-
-  if (chromeS3Bucket) {
-    const s3 = new aws.S3({ apiVersion: '2006-03-01' });
-    // s3
-    await new Promise<void>((resolve, reject) => {
-      const params = {
-        Bucket: chromeS3Bucket,
-        Key: chromeTgzFilename,
-      };
-      s3.getObject(params)
-        .createReadStream()
-        .on('error', err => reject(err))
-        .pipe(
-          tar.x({
-            C: tmpPath,
-          })
-        )
-        .on('error', err => reject(err))
-        .on('end', () => resolve());
-    });
-    return chromePathTmp;
-  }
-
-  return undefined;
-}
-
-function copyPackagedFonts(): void {
-  if (process.env.HOME === undefined) {
-    process.env.HOME = '/tmp';
-  }
-
-  const home = process.env.HOME;
-  const srcFontDir = path.join(__dirname, 'fonts');
-  const destFontDir = path.join(home, '.fonts');
-  if (fs.existsSync(srcFontDir) !== true) {
-    return;
-  }
-  if (fs.existsSync(destFontDir) !== true) {
-    fs.mkdirSync(destFontDir);
-  }
-
-  const fontFiles = fs.readdirSync(srcFontDir);
-  fontFiles.forEach(f => fs.copyFileSync(path.join(srcFontDir, f), path.join(destFontDir, f.replace(' ', '+'))));
-}
-
 export async function getBrowser(
-  mode: BrowserMode,
-  externalFontUrls: string[] | null = null
+  mode: BrowserMode
 ): Promise<puppeteer.Browser> {
   if (browser && (await browserOk(browser))) {
     return browser;
   }
 
   if (mode === 'lambda') {
-    // load fonts
-    copyPackagedFonts();
-    if (externalFontUrls) {
-      await Promise.all(externalFontUrls.map(url => chromiumLambda.font(url)));
-    }
-
     browser = (await chromiumLambda.puppeteer.launch({
       args: chromiumLambda.args,
-      defaultViewport: chromiumLambda.defaultViewport,
       executablePath: await chromiumLambda.executablePath,
+      defaultViewport: chromiumLambda.defaultViewport,
       headless: chromiumLambda.headless,
+      ignoreHTTPSErrors: true,
     })) as puppeteer.Browser;
   } else {
-    const executablePath = await findChrome(false);
-
     browser = await puppeteer.launch({
+      executablePath: process.env.APP_PUPPETEER_EXECUTABLE,
       headless: true,
       defaultViewport: undefined,
       dumpio: false,
-      executablePath: executablePath,
       args: mode === 'docker' ? launchOptionForLambda : undefined,
     });
   }
