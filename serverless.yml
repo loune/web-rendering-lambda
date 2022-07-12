@@ -1,50 +1,23 @@
-service: web-rendering
+service: page-renderer
 
 provider:
   name: aws
   stage: dev
-  region: us-west-2
+  region: eu-west-3
   runtime: nodejs14.x
   memorySize: 1536
   timeout: 30
-  versionFunctions: false
-  logRetentionInDays: 14
-  iam:
-    role:
-      statements:
-        # S3 upload
-        - Effect: 'Allow'
-          Action:
-            - '*'
-          Resource: 'arn:aws:s3:::*'
-        - Effect: 'Allow'
-          Action:
-            - 'lambda:InvokeFunction'
-          Resource: 'arn:aws:lambda:::function:*'
-  environment:
-    FONTCONFIG_PATH: ./fonts
 
 functions:
   render:
     handler: render.handler
-    events: # All events associated with this function
-      - http:
-          path: render
-          method: get
-          request:
-            parameters:
-              querystrings:
-                url: true
-                type: false
-      - http:
-          path: render
-          method: post
+    url:
+      authorizer: aws_iam
 
 package:
   artifact: ./package.zip
 
 plugins:
-  - serverless-apigw-binary
   - serverless-hooks-plugin
 
 custom:

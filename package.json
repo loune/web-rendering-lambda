@@ -9,12 +9,9 @@
     "node": ">=14.16"
   },
   "scripts": {
-    "package": "yarn package-without-chrome",
-    "package-with-chrome": "yarn package-prepare && tar -xzf headless-chromium.tar.gz -C dist && cd dist && ../node_modules/.bin/bestzip ../package.zip .",
-    "package-without-chrome": "yarn package-prepare && cd dist && rm -f ../package.zip && ../node_modules/.bin/bestzip ../package.zip .",
-    "package-prepare": "yarn compile-production && yarn package-fonts && cp -r package.json yarn.lock dist && cd dist && PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1 yarn install --production",
-    "package-fonts": "if [ -e fonts ]; then cp -a fonts dist ; fi",
-    "compile-production": "rm -rf dist && mkdir dist && ./node_modules/.bin/babel src --extensions .ts,.js --out-dir dis",
+    "package": "yarn package-prepare && cd dist && rm -f ../package.zip && ../node_modules/.bin/bestzip ../package.zip .",
+    "package-prepare": "yarn compile-production && cp -r package.json yarn.lock dist && cd dist && PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1 yarn install --production",
+    "compile-production": "rm -rf dist && mkdir dist && ./node_modules/.bin/babel src --extensions .ts,.js --out-dir dist",
     "compile-debug": "rm -rf dist && mkdir dist && ./node_modules/.bin/babel src --extensions .ts,.js --out-dir dist --source-maps",
     "docker-build": "docker build -t web-rendering-lambda .",
     "docker-run": "docker run -p 8008:8008 -it web-rendering-lambda",
@@ -37,12 +34,9 @@
     "@babel/core": "^7.18.6",
     "@babel/preset-env": "^7.18.6",
     "@babel/preset-typescript": "^7.18.6",
-    "@types/archiver": "^5.3.1",
     "@types/aws-lambda": "^8.10.101",
-    "@types/base64-stream": "^1.0.2",
     "@types/jest": "^28.1.4",
     "@types/node": "^18",
-    "@types/tar": "^6.1.1",
     "@typescript-eslint/eslint-plugin": "^5.30.6",
     "@typescript-eslint/parser": "^5.30.6",
     "aws-sdk": "^2.1173.0",
@@ -58,11 +52,8 @@
     "prettier": "^2.7.1",
     "puppeteer": "^15.3.2",
     "serverless": "^3.20.0",
-    "serverless-apigw-binary": "^0.4.4",
     "serverless-hooks-plugin": "^1.1.0",
     "ts-jest": "^28.0.5",
-    "ts-json-schema-generator": "^1.0.0",
-    "typescript": "^4.7.4",
-    "unzip-stream": "^0.3.1"
+    "typescript": "^4.7.4"
   }
 }
