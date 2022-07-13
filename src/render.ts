@@ -2,6 +2,7 @@ import type { APIGatewayProxyResult, APIGatewayEvent, Context } from 'aws-lambda
 import { Browser } from 'puppeteer-core';
 import { getBrowser, closeBrowser, version, BrowserMode } from './chrome';
 import { userAgent } from './useragent';
+import { Protocol } from "devtools-protocol";
 
 export interface Query {
   url: string;
@@ -36,10 +37,17 @@ const defaultViewportWidth = 1280;
 const defaultViewportHeight = 800;
 const defaultViewportdeviceScaleFactor = 1;
 
+interface RPage {
+  url: string
+  content: string
+  cookies: Array<Protocol.Network.Cookie>
+  headers: Record<string, string>
+}
+
 async function renderPage(
   browser: Browser,
   config: RenderConfig
-): Promise<string> {
+): Promise<RPage> {
   const page = await browser.newPage();
 
   // clear cookies
@@ -80,6 +88,11 @@ async function renderPage(
     await page.emulateMediaType(config.media);
   }
 
+  const waitForResponse = page.waitForResponse(
+      (response) =>
+        response.url() === config.url && response.status() === 200
+  );
+
   try {
     if (config.url) {
       await page.goto(config.url, {
@@ -98,33 +111,42 @@ async function renderPage(
     }
   }
 
-  const result = await page.content();
+  const url = await page.url();
+  const response = await waitForResponse;
+  const content = await page.content();
+  const headers = await response.headers();
+  const cookies = await page.cookies();
 
   page.close().catch(e => console.error(e));
 
-  return result;
+  return {
+    url,
+    headers,
+    cookies,
+    content,
+  }
 }
 
 function errorResponse(statusCode: number, message: string | Record<string, unknown>): APIGatewayProxyResult {
   console.error(`${statusCode}: ${message}`);
   return {
     statusCode: statusCode,
-    body: Buffer.from(typeof message === 'string' ? message : JSON.stringify(message), 'utf8').toString('base64'),
+    body: Buffer.from(JSON.stringify({ message }), 'utf8').toString('base64'),
     headers: {
-      'content-type': typeof message === 'string' ? 'text/plain' : 'application/json',
+      'content-type': 'application/json',
     },
     isBase64Encoded: true,
   };
 }
 
 export const render = async (browser: Browser, config: RenderConfig): Promise<APIGatewayProxyResult> => {
-  const content = await renderPage(browser, config);
-  
+  const page = await renderPage(browser, config);
+
   return {
     statusCode: 200,
-    body: Buffer.from(content).toString('base64'),
+    body: Buffer.from(JSON.stringify(page), 'utf8').toString('base64'),
     headers: {
-      'content-type': 'text/plain',
+      'content-type': 'application/json',
     },
     isBase64Encoded: true,
   };
