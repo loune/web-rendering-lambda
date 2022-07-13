@@ -21,9 +21,6 @@ plugins:
   - serverless-hooks-plugin
 
 custom:
-  apigwBinary:
-    types:
-      - '*/*'
   hooks:
     package:initialize:
       - yarn package
