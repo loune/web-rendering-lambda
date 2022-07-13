@@ -97,17 +97,10 @@ async function renderPage(
     );
 
     try {
-        if (config.url) {
-            await page.goto(config.url, {
-                timeout: config.timeout || defaultTimeout,
-                waitUntil: ['domcontentloaded', 'networkidle2'],
-            });
-        } else {
-            await page.setContent(config.content || '', {
-                timeout: config.timeout || defaultTimeout,
-                waitUntil: ['domcontentloaded', 'networkidle2'],
-            });
-        }
+        await page.goto(config.url, {
+            timeout: config.timeout || defaultTimeout,
+            waitUntil: ['domcontentloaded', 'networkidle2'],
+        });
     } catch (e: any) {
         if (e.name !== 'TimeoutError') {
             throw e;
